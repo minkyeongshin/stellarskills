@@ -392,10 +392,10 @@
 
   .Card {
     --Card-color-border: transparent;
-    --Card-padding: pxToRem(24px);
+    --Card-padding: 0;
 
     .Card__container {
-      padding: pxToRem(24px);
+      padding: 0;
     }
   }
 }
@@ -508,9 +508,9 @@ h2.SkillsCard__title {
   align-items: center;
   gap: pxToRem(8px);
   font-family: "Inter", sans-serif;
-  font-size: pxToRem(14px);
+  font-size: pxToRem(16px);
   font-weight: 600;
-  line-height: pxToRem(20px);
+  line-height: pxToRem(24px);
   margin: 0;
   color: var(--sds-clr-gray-12);
 
@@ -524,9 +524,9 @@ h2.SkillsCard__title {
 
 .SkillsCard p.SkillsCard__description {
   font-family: "Inter", sans-serif;
-  font-size: pxToRem(12px);
+  font-size: pxToRem(14px);
   font-weight: 400;
-  line-height: pxToRem(18px);
+  line-height: pxToRem(20px);
   margin: 0 0 pxToRem(8px) 0 !important;
   color: var(--sds-clr-gray-11);
 }
@@ -653,7 +653,6 @@ p.SkillsLanding__sectionDescription {
 
   .SkillsCard {
     background-color: transparent !important;
-    padding: pxToRem(16px) !important;
     margin: pxToRem(16px);
   }
 
