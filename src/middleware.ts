@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
     frame-src 'self' https://connect.trezor.io/ https://hot-labs.org/ https://www.youtube.com/;
     base-uri 'self';
     form-action 'self';
-    frame-ancestors 'none';
+    frame-ancestors 'self' http://localhost:* https://*.vercel.app;
     block-all-mixed-content;
     ${isLocalhost ? "" : "upgrade-insecure-requests;"}
 `;
