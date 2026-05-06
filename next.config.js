@@ -13,6 +13,20 @@ const nextConfig = {
 
     return config;
   },
+  // Allow this site to be embedded in iframes (for demo purposes)
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *",
+          },
+        ],
+      },
+    ];
+  },
   // Adding client side redirects to support old URLs in case they were saved or
   // bookmarked.
   async redirects() {
