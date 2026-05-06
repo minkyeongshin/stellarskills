@@ -31,7 +31,27 @@ const LOCAL_STORAGE_SAVED_THEME = "stellarTheme:Laboratory";
 
 type ModeType = "human" | "agent";
 
-const FALLBACK_ORIGIN = "https://stellarskills.com";
+/**
+ * Origin used during SSR (and the brief moment before useEffect replaces it
+ * with `window.location.origin` on the client). Resolves at build time from
+ * the same precedence as scripts/generate-llms-txt.mjs:
+ *
+ *   NEXT_PUBLIC_SITE_URL                       manual override
+ *   NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL  canonical production domain
+ *   NEXT_PUBLIC_VERCEL_URL                     per-deployment URL
+ *   "http://localhost:3000"                    local default
+ *
+ * The NEXT_PUBLIC_VERCEL_* vars are auto-exposed by Vercel for any Next.js
+ * project, so production deployments need no manual config once a domain
+ * is attached to the Vercel project.
+ */
+const FALLBACK_ORIGIN =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : "http://localhost:3000");
 
 const hostFromOrigin = (origin: string) => origin.replace(/^https?:\/\//, "");
 

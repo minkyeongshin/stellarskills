@@ -10,9 +10,11 @@
  * Built from the same data source as the page UI; runs alongside
  * fetch-skills.mjs in the predev/prebuild lifecycle.
  *
- * Env:
- *   SITE_ORIGIN   absolute origin to use in link URLs (default
- *                 "https://stellarskills.com")
+ * Origin resolution (highest to lowest priority):
+ *   SITE_ORIGIN                       manual override
+ *   VERCEL_PROJECT_PRODUCTION_URL     canonical production domain on Vercel
+ *   VERCEL_URL                        per-deployment URL on Vercel
+ *   "http://localhost:3000"           local default
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -22,7 +24,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(__dirname);
 const SKILLS_DATA_FILE = join(ROOT, "src/data/skills.ts");
 const OUT_FILE = join(ROOT, "public/llms.txt");
-const ORIGIN = process.env.SITE_ORIGIN ?? "https://stellarskills.com";
+
+const ORIGIN =
+  process.env.SITE_ORIGIN ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
 
 const source = readFileSync(SKILLS_DATA_FILE, "utf8");
 
