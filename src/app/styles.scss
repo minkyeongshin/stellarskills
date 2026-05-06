@@ -400,6 +400,12 @@
   }
 }
 
+.SkillsLanding__filterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 // =============================================================================
 // Filter tabs
 // =============================================================================
@@ -579,12 +585,14 @@ h2.SkillsCard__title {
   color: var(--sds-clr-gray-12);
 }
 
-.SkillsCard__actions {
+.SkillsCard__header {
   display: flex;
   align-items: center;
-  gap: pxToRem(16px);
+  gap: pxToRem(8px);
+  margin-bottom: pxToRem(4px);
 
   .Button {
+    flex-shrink: 0;
     padding-left: 0;
     padding-right: 0;
     border-color: transparent !important;

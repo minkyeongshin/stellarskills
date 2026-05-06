@@ -6,7 +6,11 @@
     "node": ">=22.22.0"
   },
   "scripts": {
+    "fetch:skills": "node scripts/fetch-skills.mjs",
+    "generate:llms-txt": "node scripts/generate-llms-txt.mjs",
+    "predev": "node scripts/fetch-skills.mjs --cached --lenient && node scripts/generate-llms-txt.mjs",
     "dev": "NEXT_PUBLIC_COMMIT_HASH=$(git rev-parse --short HEAD) next dev",
+    "prebuild": "node scripts/fetch-skills.mjs && node scripts/generate-llms-txt.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

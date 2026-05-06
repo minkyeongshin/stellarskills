@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Badge,
@@ -12,6 +18,12 @@ import {
 } from "@stellar/design-system";
 
 import { Hydration } from "@/components/Hydration";
+import {
+  ECOSYSTEM_CARDS,
+  FILTERS,
+  FilterType,
+  SKILL_CARD_SOURCES,
+} from "@/data/skills";
 
 import "./styles.scss";
 
@@ -22,6 +34,16 @@ type ModeType = "human" | "agent";
 const FALLBACK_ORIGIN = "https://stellarskills.com";
 
 const hostFromOrigin = (origin: string) => origin.replace(/^https?:\/\//, "");
+
+/**
+ * Map a stellarskills.com path back to its source-of-truth file in
+ * stellar/stellar-dev-skill. The upstream repo is flat under `skill/`,
+ * so the basename of the site path is the upstream filename.
+ */
+const getGitHubSourceUrl = (sitePath: string) => {
+  const filename = sitePath.split("/").pop() ?? "";
+  return `https://github.com/stellar/stellar-dev-skill/blob/main/skill/${filename}`;
+};
 
 const getModeContent = (
   origin: string,
@@ -60,156 +82,46 @@ Fetch any skill file to get detailed, up-to-date context for your AI agent.
 `;
 };
 
-type FilterType = "All" | "Soroban" | "Frontend" | "Assets" | "APIs" | "Security" | "Standards" | "ZK" | "Ecosystem";
-
-const FILTERS: FilterType[] = ["All", "Soroban", "Frontend", "Assets", "APIs", "Security", "Standards", "ZK", "Ecosystem"];
-
 type SkillCard = {
   title: string;
   description: string;
   pathLabel: string;
   copyValue: string;
   category: FilterType;
+  sourceUrl: string;
 };
 
-type SkillCardSource = {
-  title: string;
-  description: string;
-  path: string;
-  category: FilterType;
+type CopyButtonVariant = "pill" | "path";
+
+type CopyButtonProps = {
+  /** The string written to the clipboard. */
+  value: string;
+  /** Optional label shown to the user; defaults to `value`. */
+  displayValue?: string;
+  /**
+   * Visual variant.
+   * - `pill`: prominent hero-style copy chip.
+   * - `path`: smaller path-style chip used inside skill cards.
+   */
+  variant?: CopyButtonVariant;
+  /** Accessible label override. */
+  ariaLabel?: string;
 };
 
-const SkillCardSources: SkillCardSource[] = [
-  {
-    title: "Stellar Development Skill",
-    description:
-      "Stellar Development Skill helps you build apps on Stellar using Soroban smart contracts, frontend integrations, and ecosystem tools.",
-    path: "/skill/SKILL.md",
-    category: "All",
-  },
-  {
-    title: "Build Smart Contracts",
-    description: "Create Soroban contracts with Rust and WebAssembly.",
-    path: "/skills/soroban/contracts-soroban.md",
-    category: "Soroban",
-  },
-  {
-    title: "Use Advanced Contract Patterns",
-    description: "Apply scalable architecture and contract design patterns.",
-    path: "/skills/soroban/advanced-patterns.md",
-    category: "Soroban",
-  },
-  {
-    title: "Avoid Common Pitfalls",
-    description: "Prevent frequent errors in Soroban development flows.",
-    path: "/skills/soroban/common-pitfalls.md",
-    category: "Soroban",
-  },
-  {
-    title: "Integrate Stellar in Frontend Apps",
-    description: "Build app flows with Stellar SDK and wallet support.",
-    path: "/skills/frontend/frontend-stellar-sdk.md",
-    category: "Frontend",
-  },
-  {
-    title: "Test Contract Logic",
-    description: "No description yet.",
-    path: "/skills/soroban/testing.md",
-    category: "Soroban",
-  },
-  {
-    title: "Stellar Assets",
-    description:
-      "Stellar trustlines and assets—create, manage, authorize.",
-    path: "/skills/assets/stellar-assets.md",
-    category: "Assets",
-  },
-  {
-    title: "API RPC Horizon",
-    description:
-      "Stellar APIs for network data—RPC, Horizon, and fetching accounts, transactions, and ledgers.",
-    path: "/skills/apis/api-rpc-horizon.md",
-    category: "APIs",
-  },
-  {
-    title: "Security",
-    description:
-      "Soroban smart contract security—vulnerabilities, access control, reentrancy.",
-    path: "/skills/security/security.md",
-    category: "Security",
-  },
-  {
-    title: "Standards Reference",
-    description:
-      "Stellar SEPs and standards—implementations, interoperability, compliance.",
-    path: "/skills/standards/standards-reference.md",
-    category: "Standards",
-  },
-  {
-    title: "ZK Proofs",
-    description:
-      "Zero-knowledge proofs on Stellar—privacy transactions and Soroban verification.",
-    path: "/skills/zk/zk-proofs.md",
-    category: "ZK",
-  },
-  {
-    title: "Ecosystem",
-    description:
-      "Stellar ecosystem tools and services. Covers anchors, wallets, exchanges, and third-party integrations.",
-    path: "/skills/ecosystem/ecosystem.md",
-    category: "Ecosystem",
-  },
-  {
-    title: "Resources",
-    description:
-      "Curated resources for Stellar development. Covers documentation, tutorials, community channels, and developer tools.",
-    path: "/skills/ecosystem/resources.md",
-    category: "Ecosystem",
-  },
-];
-
-const EcosystemCards: SkillCard[] = [
-  {
-    title: "On/off-ramp integration",
-    description:
-      "Connect users to fiat banking rails via Stellar anchor services using SEP-24 and SEP-31.",
-    pathLabel: "github.com/<provider>/SKILL.md",
-    copyValue: "https://github.com/<provider>/SKILL.md",
-    category: "Ecosystem",
-  },
-  {
-    title: "Smart wallet / Smart account setup",
-    description:
-      "Build programmable smart accounts with multi-sig, spending limits, and account abstraction on Stellar.",
-    pathLabel: "github.com/<project>/SKILL.md",
-    copyValue: "https://github.com/<project>/SKILL.md",
-    category: "Ecosystem",
-  },
-  {
-    title: "USDC on Stellar",
-    description:
-      "Issue, transfer, and integrate Circle's USDC within Stellar apps and Soroban contracts.",
-    pathLabel: "github.com/<project>/SKILL.md",
-    copyValue: "https://github.com/<project>/SKILL.md",
-    category: "Ecosystem",
-  },
-  {
-    title: "Cross-chain bridging",
-    description:
-      "Bridge assets between Stellar and other blockchains using atomic swaps and lock-and-mint patterns.",
-    pathLabel: "github.com/<project>/SKILL.md",
-    copyValue: "https://github.com/<project>/SKILL.md",
-    category: "Ecosystem",
-  },
-];
-
-const CopyPill = ({
+/**
+ * Button that copies a string to the clipboard and shows a transient
+ * "copied" affordance. Used for both the hero pill and per-card path
+ * pills.
+ *
+ * @example
+ * <CopyButton value="https://stellarskills.com/SKILL.md" variant="pill" />
+ */
+const CopyButton = ({
   value,
   displayValue,
-}: {
-  value: string;
-  displayValue?: string;
-}) => {
+  variant = "pill",
+  ariaLabel,
+}: CopyButtonProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -218,53 +130,41 @@ const CopyPill = ({
     setTimeout(() => setCopied(false), 1000);
   };
 
+  const wrapperClass =
+    variant === "pill"
+      ? "SkillsCopyPill__wrapper"
+      : "SkillsCard__pathWrapper";
+  const buttonClass =
+    variant === "pill" ? "SkillsCopyPill" : "SkillsCard__pathButton";
+  const textClass =
+    variant === "pill" ? "SkillsCopyPill__text" : "SkillsCard__pathText";
+
   return (
-    <div className="SkillsCopyPill__wrapper">
+    <div className={wrapperClass}>
       <button
         type="button"
-        className="SkillsCopyPill"
+        className={buttonClass}
         onClick={handleCopy}
-        aria-label="Copy"
+        aria-label={ariaLabel ?? `Copy ${displayValue ?? value}`}
         data-copied={copied}
       >
-        <span className="SkillsCopyPill__text">{displayValue ?? value}</span>
-        <span className="SkillsCopyPill__copyIcon">
-          {copied ? <Icon.CheckCircle /> : <Icon.Copy01 />}
-        </span>
+        <span className={textClass}>{displayValue ?? value}</span>
+        {variant === "pill" ? (
+          <span className="SkillsCopyPill__copyIcon">
+            {copied ? <Icon.CheckCircle /> : <Icon.Copy01 />}
+          </span>
+        ) : copied ? (
+          <Icon.CheckCircle />
+        ) : (
+          <Icon.Copy01 />
+        )}
       </button>
     </div>
   );
 };
 
-const CopyPathButton = ({
-  pathLabel,
-  copyValue,
-}: {
-  pathLabel: string;
-  copyValue: string;
-}) => {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(copyValue);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
-  };
-
-  return (
-    <div className="SkillsCard__pathWrapper">
-      <button
-        type="button"
-        className="SkillsCard__pathButton"
-        onClick={handleCopy}
-        data-copied={copied}
-      >
-        <span className="SkillsCard__pathText">{pathLabel}</span>
-        {copied ? <Icon.CheckCircle /> : <Icon.Copy01 />}
-      </button>
-    </div>
-  );
-};
+const filterTabId = (filter: FilterType) => `skills-filter-tab-${filter}`;
+const filterPanelId = (filter: FilterType) => `skills-filter-panel-${filter}`;
 
 export default function LandingPage() {
   const searchParams = useSearchParams();
@@ -273,6 +173,9 @@ export default function LandingPage() {
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
   const [origin, setOrigin] = useState<string>(FALLBACK_ORIGIN);
+  const tabRefs = useRef<Record<FilterType, HTMLButtonElement | null>>(
+    {} as Record<FilterType, HTMLButtonElement | null>,
+  );
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -280,16 +183,48 @@ export default function LandingPage() {
 
   const skillCards = useMemo<SkillCard[]>(() => {
     const host = hostFromOrigin(origin);
-    return SkillCardSources.map((s) => ({
+    return SKILL_CARD_SOURCES.map((s) => ({
       title: s.title,
       description: s.description,
       category: s.category,
       pathLabel: `${host}${s.path}`,
       copyValue: `${origin}${s.path}`,
+      sourceUrl: getGitHubSourceUrl(s.path),
     }));
   }, [origin]);
 
   const activeModeContent = getModeContent(origin)[mode];
+
+  /**
+   * Standard ARIA tabs keyboard pattern: ArrowLeft/ArrowRight cycle
+   * through the tablist, Home/End jump to the ends. The newly focused
+   * tab is also activated (manual activation would also be valid;
+   * automatic activation matches this page's existing UX).
+   *
+   * @see https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
+   */
+  const handleTabKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % FILTERS.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + FILTERS.length) % FILTERS.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = FILTERS.length - 1;
+    }
+
+    if (nextIndex !== null) {
+      event.preventDefault();
+      const nextFilter = FILTERS[nextIndex];
+      setActiveFilter(nextFilter);
+      tabRefs.current[nextFilter]?.focus();
+    }
+  };
 
   // Agent mode: show raw SKILL.md content only
   if (mode === "agent") {
@@ -299,6 +234,11 @@ export default function LandingPage() {
       </div>
     );
   }
+
+  const filteredSkillCards = skillCards
+    .slice(1)
+    .filter((c) => activeFilter === "All" || c.category === activeFilter)
+    .slice(0, activeFilter === "All" ? undefined : 5);
 
   return (
     <div className="SkillsLanding">
@@ -330,7 +270,8 @@ export default function LandingPage() {
           <h1 className="SkillsLanding__title">Give your AI the right Stellar context before it writes code. Works with any AI agent.</h1>
 
           <div className="SkillsLanding__pill">
-            <CopyPill
+            <CopyButton
+              variant="pill"
               value={activeModeContent.value}
               displayValue={activeModeContent.displayValue}
             />
@@ -341,46 +282,98 @@ export default function LandingPage() {
           {/* First card - always visible */}
           <Card key={skillCards[0].title}>
             <div className="SkillsCard">
-              <h2 className="SkillsCard__title">{skillCards[0].title}</h2>
+              <div className="SkillsCard__header">
+                <h2 className="SkillsCard__title">{skillCards[0].title}</h2>
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  icon={<Icon.LinkExternal01 />}
+                  aria-label={`View ${skillCards[0].title} source`}
+                  onClick={() =>
+                    window.open(
+                      skillCards[0].sourceUrl,
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                />
+              </div>
 
               <p className="SkillsCard__description">{skillCards[0].description}</p>
 
-              <CopyPathButton pathLabel={skillCards[0].pathLabel} copyValue={skillCards[0].copyValue} />
+              <CopyButton
+                variant="path"
+                value={skillCards[0].copyValue}
+                displayValue={skillCards[0].pathLabel}
+              />
             </div>
           </Card>
 
           {/* Filter tabs */}
           <div className="SkillsLanding__filters" role="tablist" aria-label="Filter skills">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                role="tab"
-                className="SkillsLanding__filterTab"
-                data-is-active={activeFilter === filter}
-                aria-selected={activeFilter === filter}
-                onClick={() => setActiveFilter(filter)}
-              >
-                {filter}
-              </button>
-            ))}
+            {FILTERS.map((filter, index) => {
+              const isActive = activeFilter === filter;
+              return (
+                <button
+                  key={filter}
+                  type="button"
+                  role="tab"
+                  id={filterTabId(filter)}
+                  aria-controls={filterPanelId(filter)}
+                  aria-selected={isActive}
+                  tabIndex={isActive ? 0 : -1}
+                  ref={(el) => {
+                    tabRefs.current[filter] = el;
+                  }}
+                  className="SkillsLanding__filterTab"
+                  data-is-active={isActive}
+                  onClick={() => setActiveFilter(filter)}
+                  onKeyDown={(event) => handleTabKeyDown(event, index)}
+                >
+                  {filter}
+                </button>
+              );
+            })}
           </div>
 
           {/* Filtered skill cards */}
-          {skillCards.slice(1)
-            .filter((c) => activeFilter === "All" || c.category === activeFilter)
-            .slice(0, activeFilter === "All" ? undefined : 5)
-            .map((c, idx) => (
+          <div
+            role="tabpanel"
+            id={filterPanelId(activeFilter)}
+            aria-labelledby={filterTabId(activeFilter)}
+            className="SkillsLanding__filterPanel"
+          >
+            {filteredSkillCards.map((c, idx) => (
               <Card key={`${c.title}-${idx}`}>
                 <div className="SkillsCard">
-                  <h2 className="SkillsCard__title">{c.title}</h2>
+                  <div className="SkillsCard__header">
+                    <h2 className="SkillsCard__title">{c.title}</h2>
+                    <Button
+                      variant="tertiary"
+                      size="sm"
+                      icon={<Icon.LinkExternal01 />}
+                      aria-label={`View ${c.title} source`}
+                      onClick={() =>
+                        window.open(
+                          c.sourceUrl,
+                          "_blank",
+                          "noopener,noreferrer",
+                        )
+                      }
+                    />
+                  </div>
 
                   <p className="SkillsCard__description">{c.description}</p>
 
-                  <CopyPathButton pathLabel={c.pathLabel} copyValue={c.copyValue} />
+                  <CopyButton
+                    variant="path"
+                    value={c.copyValue}
+                    displayValue={c.pathLabel}
+                  />
                 </div>
               </Card>
             ))}
+          </div>
         </section>
 
         {/* Ecosystem section - always visible below skills */}
@@ -390,14 +383,33 @@ export default function LandingPage() {
             Skills built and maintained by the Stellar community. The resources listed here are community-contributed and are not endorsed by the Stellar Foundation. Always do your own research (DYOR) before using any tool or resource. Inclusion in this list does not imply any warranty, security audit, or official recommendation. (Text TBD)
           </p>
           <div className="SkillsLanding__ecosystemGrid">
-            {EcosystemCards.map((c, idx) => (
+            {ECOSYSTEM_CARDS.map((c, idx) => (
               <Card key={`ecosystem-${c.title}-${idx}`}>
                 <div className="SkillsCard">
-                  <h3 className="SkillsCard__title">{c.title}</h3>
+                  <div className="SkillsCard__header">
+                    <h3 className="SkillsCard__title">{c.title}</h3>
+                    <Button
+                      variant="tertiary"
+                      size="sm"
+                      icon={<Icon.LinkExternal01 />}
+                      aria-label={`View ${c.title} source`}
+                      onClick={() =>
+                        window.open(
+                          c.copyValue,
+                          "_blank",
+                          "noopener,noreferrer",
+                        )
+                      }
+                    />
+                  </div>
 
                   <p className="SkillsCard__description">{c.description}</p>
 
-                  <CopyPathButton pathLabel={c.pathLabel} copyValue={c.copyValue} />
+                  <CopyButton
+                    variant="path"
+                    value={c.copyValue}
+                    displayValue={c.pathLabel}
+                  />
                 </div>
               </Card>
             ))}
@@ -420,7 +432,7 @@ export default function LandingPage() {
         </span>
       </footer>
 
-      
+
     </div>
   );
 }

@@ -1,121 +1,102 @@
-# Stellar Lab (Lab)
+# Stellar Skills
 
 [![Apache 2.0 licensed](https://img.shields.io/badge/license-apache%202.0-blue.svg)](LICENSE)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/stellar/laboratory)
 
-The Stellar Lab is an interactive toolkit for exploring the Stellar network. It
-helps developers and builders experiment with building, signing, simulating, and
-submitting transactions, as well as making requests to both RPC and Horizon
-APIs. With built-in tools for saving and sharing transactions, converting
-between XDR and JSON, and exploring smart contracts on Stellar, the Stellar Lab
-is ideal for testing, learning, and exploring on Stellar.
+[stellarskills.com](https://stellarskills.com) is a directory of agent-readable
+documentation ("skills") for building on the Stellar network. Each skill is a
+plain markdown file that can be fetched directly by an AI agent (or read by a
+human) to provide focused, up-to-date Stellar context — covering Soroban smart
+contracts, frontend integrations, assets, APIs, security, standards, and the
+broader ecosystem.
 
-## Overview
-
-The `main` branch is deployed to
-[https://lab.stellar.org/](https://lab.stellar.org/). On the landing page at the
-bottom right, you can reference a commit hash of the web app version you're
-viewing.
-
-## Prerequisites
-
-- Node.js >= 22.22.0: https://nodejs.org/en/blog/release/v22.22.0
-- pnpm >= 10.15.1: https://pnpm.io/blog/releases/10.15
+This repo was forked from [Stellar Lab](https://github.com/stellar/laboratory)
+and stripped down to a single static landing page that lists and links to those
+skill files.
 
 ## Tech stack
 
-- [Next.js](https://nextjs.org/) framework (React)
-- [TypeScript](https://www.typescriptlang.org/)
+- [Next.js 15](https://nextjs.org/) (App Router) with [React 19](https://react.dev/)
+- [TypeScript 5](https://www.typescriptlang.org/)
 - [Stellar Design System](https://design-system.stellar.org/) for UI
-- [Sass](https://sass-lang.com/) for CSS styling
-- [TanStack (React) Query](https://tanstack.com/query/latest) for API queries
-- [Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction) for state
-  management
-- [Playwright](https://playwright.dev/) for e2e tests
-- [pnpm](https://pnpm.io/installation)
+- [Sass](https://sass-lang.com/) for styling
+- Deployed via Vercel
 
-## Developing
+See `package.json` for exact versions.
+
+## Local development
+
+Prerequisites: Node.js >= 22.22.0, pnpm >= 10.15.1.
 
 ```sh
+pnpm install
 pnpm dev
 ```
 
-### Network Limits
+The first `pnpm dev` (and every `pnpm build`) runs
+[`scripts/fetch-skills.mjs`](scripts/fetch-skills.mjs) automatically to
+download skill markdown from
+[`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill)
+into `public/`. Subsequent dev starts reuse the cached files and work
+offline.
 
-The Lab automatically fetches Stellar network limits (Mainnet, Testnet, and
-Futurenet) before every `dev` run.
-
-To configure RPC endpoints, edit the `NETWORKS` array in
-`scripts/fetch-network-limits.js`:
-
-```javascript
-const NETWORKS = [
-  { name: "mainnet", rpcUrl: "MAINNET_RPC_URL" },
-  { name: "testnet", rpcUrl: "TESTNET_RPC_URL" },
-  { name: "futurenet", rpcUrl: "FUTURENET_RPC_URL" },
-];
-```
-
-The script generates `src/constants/networkLimits.ts` with type-safe exports:
-
-```typescript
-import { MAINNET_LIMITS, NETWORK_LIMITS } from "@/constants/networkLimits";
-```
-
-To manually fetch limits: `pnpm fetch-limits`.
-
-### Hardware Wallets
-
-Testing hardware wallets requires an HTTPS connection to enable U2F. The
-recommended way to do this is with [`ngrok`](https://ngrok.com/). Once
-downloaded and authenticated, start ngrok, and tell the Lab to start with a
-public URL.
-
-```bash
-./ngrok http 3000
-# in a separate terminal
-# the subdomain will appear in ngrok's output
-pnpm start --public randomsubdomain.ngrok.io
-```
-
-## Building for production
+Other scripts:
 
 ```sh
-pnpm build
+pnpm build           # production build (refetches skills)
+pnpm start           # run production build locally
+pnpm lint            # eslint
+pnpm lint:ts         # typescript check
+pnpm fetch:skills    # manually refresh skill markdown from upstream
 ```
 
-The app will be built into the `build` directory in Next.js' standalone output
-format.
+## Skill content
 
-To run production build locally this command can be used conveniently:
+The skill markdown files served at `/skill/SKILL.md` and
+`/skills/<category>/<file>.md` are **not** stored in this repo. The source of
+truth is
+[`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill);
+files are fetched into `public/` at build time. Production deploys pick up
+changes automatically — push any commit here, or click "Redeploy" in the
+Vercel dashboard, to refresh content.
 
-```sh
-pnpm start
-```
+To pin to a specific ref, set `SKILLS_REF` (e.g. `SKILLS_REF=v1.0.0 pnpm build`).
 
-To distribute and deploy the production build you need to copy the
-`build/static` directory to the `build/standalone/public/_next/static` location,
-and then the files and directories inside the `build/standalone` directory are
-the only files needed for production and can be distributed to the deployment
-location.
+## Adding a new skill card
 
-In the deployment location the following command will run the app:
+The landing page renders skill cards from two arrays in
+[`src/data/skills.ts`](src/data/skills.ts):
 
-```sh
-node server.js
-```
+- `SKILL_CARD_SOURCES` — the main, filterable list of skills
+- `ECOSYSTEM_CARDS` — the community-contributed "Ecosystem" section at the
+  bottom
 
-## Tracking
+To add a card to the main list:
 
-To improve Lab, we use [Amplitude](https://amplitude.com/) and
-[Google Analytics](https://developers.google.com/analytics) tracking in
-production.
+1. Add (or confirm) the markdown file in
+   [`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill)
+   under `skill/<your-skill>.md`.
+2. Append an entry to `SKILL_CARD_SOURCES`:
 
-If you are running your version of Lab (for Quickstart, for example), you can
-disable the Google Analytics by setting this `env` variable:
+   ```ts
+   {
+     title: "Your Skill Title",
+     description: "One-line description shown on the card.",
+     path: "/skills/<category>/<your-skill>.md",
+     category: "Soroban", // must be one of the FilterType values
+   }
+   ```
 
-```
-NEXT_PUBLIC_DISABLE_GOOGLE_ANALYTICS=true
-```
+The fetch script maps each entry by its filename: `path` ending in
+`/<your-skill>.md` is sourced from `skill/<your-skill>.md` upstream.
+`pnpm build` fails loudly if any advertised path has no matching file.
 
-No need to disable Amplitude as it runs only on `lab.stellar.org`.
+If you introduce a new category, add it to both the `FilterType` union and
+the `FILTERS` array in `src/data/skills.ts`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+Apache 2.0 — see [LICENSE](LICENSE).
