@@ -1,53 +1,51 @@
 "use client";
 
-import { Button, Card, Heading, Icon, Text } from "@stellar/design-system";
-import { Box } from "@/components/layout/Box";
+import { useEffect } from "react";
 
-export default function Error() {
+import { ArrowLeftIcon } from "./_components/icons";
+
+type ErrorProps = {
+  error: Error & { digest?: string };
+  reset: () => void;
+};
+
+export default function Error({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
-    <Card>
-      <Box gap="xl" align="start">
-        <Box gap="md">
-          <Heading as="h2" size="xs" weight="medium">
-            Unhandled Error
-          </Heading>
+    <div className="ErrorContent">
+      <div className="ErrorContent__group">
+        <h2>Unhandled Error</h2>
 
-          <Text size="sm" as="p">
-            Uh-oh, we didn’t handle this error. We would appreciate it if you
-            opened an issue on GitHub, providing as many details as possible to
-            help us fix this bug.
-          </Text>
-        </Box>
+        <p>
+          Uh-oh, we didn’t handle this error. We would appreciate it if you
+          opened an issue on GitHub, providing as many details as possible to
+          help us fix this bug.
+          {error.digest ? ` (digest: ${error.digest})` : null}
+        </p>
+      </div>
 
-        <Box gap="md" direction="row">
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<Icon.ArrowLeft />}
-            iconPosition="left"
-            onClick={() => {
-              location.reload();
-            }}
-          >
-            Return
-          </Button>
+      <div className="ErrorContent__row">
+        <button
+          type="button"
+          className="ErrorContent__button"
+          onClick={() => reset()}
+        >
+          <ArrowLeftIcon />
+          Return
+        </button>
 
-          <Button
-            size="sm"
-            variant="primary"
-            iconPosition="left"
-            onClick={() =>
-              window.open(
-                "https://github.com/stellar/laboratory/issues",
-                "_blank",
-                "noopener,noreferrer",
-              )
-            }
-          >
-            Open Issue
-          </Button>
-        </Box>
-      </Box>
-    </Card>
+        <a
+          className="ErrorContent__button ErrorContent__button--primary"
+          href="https://github.com/stellar/stellarskills/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open Issue
+        </a>
+      </div>
+    </div>
   );
 }

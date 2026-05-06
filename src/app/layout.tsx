@@ -1,4 +1,3 @@
-import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { GoogleTagManager } from "@next/third-parties/google";
 
@@ -15,9 +14,6 @@ export const metadata: Metadata = {
     "Agent-readable documentation for building on the Stellar network.",
 };
 
-// Automatically generates nonce for script and style tags
-export const dynamic = "force-dynamic";
-
 export default function RootLayout({
   children,
 }: {
@@ -26,10 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="sds-theme-light" data-sds-theme="sds-theme-light">
-        <Suspense>
-          <div id="root">{children}</div>
-          {GA_TRACKING_ENABLED && <GoogleTagManager gtmId="GTM-KCNDDL3" />}
-        </Suspense>
+        <div id="root">{children}</div>
+        {GA_TRACKING_ENABLED && <GoogleTagManager gtmId="GTM-KCNDDL3" />}
       </body>
     </html>
   );

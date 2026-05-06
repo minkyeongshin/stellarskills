@@ -113,7 +113,7 @@ const realEcosystem = ecosystemCards.filter(
   (c) => c.copyValue && !c.copyValue.includes("<"),
 );
 if (realEcosystem.length > 0) {
-  lines.push("## Optional");
+  lines.push("## Community Built");
   lines.push("");
   lines.push(
     "Community-contributed skills hosted on third-party sites. Not endorsed by the Stellar Foundation; do your own research.",

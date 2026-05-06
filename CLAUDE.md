@@ -23,14 +23,18 @@ Don't move card data into a client component.
   `SKILL_CARD_SOURCES` (main list), `ECOSYSTEM_CARDS` (community
   section), `FilterType` / `FILTERS` (category tabs).
 - `src/app/page.tsx`: server-rendered landing page.
-- `src/app/_components/`: small client islands (`CopyButton`,
-  `SkillCard`, `SkillsFilter`, `HeaderActions`). The filter is a
-  CSS-driven tablist keyed off `data-category`.
+- `src/app/_components/`: `SkillCard` (server), `icons` (server, inline
+  SVGs), `CopyButton` / `SkillsFilter` / `ThemeSwitchIsland` (client
+  islands). The filter is a CSS-driven tablist keyed off `data-category`.
 - `scripts/fetch-skills.mjs`: downloads upstream markdown into
-  `public/skills/` at build time.
+  `public/skills/` at build time. Validates `SKILLS_REF` against
+  `[A-Za-z0-9._/-]+` and uses `spawn("tar")` (no shell) to avoid
+  injection via env vars.
 - `scripts/generate-llms-txt.mjs`: writes `public/llms.txt` from
   `src/data/skills.ts`.
-- `next.config.js`: holds CSP (`frame-ancestors *`). No middleware.
+- `next.config.js`: scoped `frame-ancestors`, plus
+  `X-Content-Type-Options: nosniff` and `Referrer-Policy`. No
+  middleware.
 
 There is no routing beyond `/`, no API routes, no backend, no test
 runner.
@@ -51,8 +55,15 @@ pnpm generate:llms-txt  # regenerate public/llms.txt
 Skill markdown lives in
 [`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill).
 `fetch-skills.mjs` maps each `SKILL_CARD_SOURCES` entry by the basename
-of its `path` to a file under `skill/` upstream. Override the ref via
-`SKILLS_REF` (default `main`).
+of its `path` to a file under `skill/` upstream.
+
+`SKILLS_REF` (default `main`) selects the upstream ref and is read in
+two places at build time: `fetch-skills.mjs` (which markdown to
+download) and `src/app/page.tsx` (per-card "view source" link target).
+Both stay in lockstep so the GitHub link points at the exact file the
+site is serving. For production, pin `SKILLS_REF` to a commit SHA in
+the Vercel env. See README.md → "Pinning the upstream version" for the
+full operator workflow.
 
 **Upstream changes are not auto-deployed.** No webhook, no scheduled
 job. The only CI workflow runs on push/PR to this repo. Upstream edits

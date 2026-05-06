@@ -44,25 +44,6 @@
 }
 
 // =============================================================================
-// Agent view (raw SKILL.md)
-// =============================================================================
-.SkillsLanding__agentView {
-  min-height: 100vh;
-  background-color: var(--sds-clr-gray-01);
-  padding: pxToRem(24px);
-}
-
-.SkillsLanding__agentContent {
-  font-family: "Roboto Mono", monospace;
-  font-size: pxToRem(14px);
-  line-height: 1.6;
-  color: var(--sds-clr-gray-12);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  margin: 0;
-}
-
-// =============================================================================
 // Header
 // =============================================================================
 .SkillsLanding__header {
@@ -163,17 +144,6 @@
   margin-bottom: pxToRem(24px);
 }
 
-.SkillsLanding__heroBackground {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100vw;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
 .SkillsLanding__title {
   position: relative;
   z-index: 1;
@@ -189,114 +159,6 @@
   @media (max-width: 768px) {
     font-size: pxToRem(28px);
     line-height: pxToRem(36px);
-  }
-}
-
-.SkillsLanding__subtitle {
-  position: relative;
-  z-index: 1;
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(16px);
-  line-height: 1.5;
-  margin: 0 0 pxToRem(16px) 0;
-  color: var(--sds-clr-gray-09);
-}
-
-// =============================================================================
-// Mode toggle
-// =============================================================================
-.SkillsLanding__modeToggle {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: pxToRem(4px);
-  padding: pxToRem(4px);
-  margin: 0 auto pxToRem(24px);
-  background-color: var(--sds-clr-gray-03);
-  border: 1px solid var(--sds-clr-gray-06);
-  border-radius: pxToRem(999px);
-}
-
-.SkillsLanding__modeButton {
-  display: inline-flex;
-  align-items: center;
-  gap: pxToRem(6px);
-  padding: pxToRem(8px) pxToRem(16px);
-  border: none;
-  border-radius: pxToRem(999px);
-  background-color: transparent;
-  cursor: pointer;
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(14px);
-  font-weight: var(--sds-fw-medium);
-  color: var(--sds-clr-gray-09);
-  transition:
-    background-color var(--sds-anim-transition-default),
-    color var(--sds-anim-transition-default);
-
-  svg {
-    width: pxToRem(16px);
-    height: pxToRem(16px);
-    stroke: currentColor;
-  }
-
-  @media (hover: hover) {
-    &:hover:not([data-is-active="true"]) {
-      color: var(--sds-clr-gray-11);
-    }
-  }
-
-  &[data-is-active="true"] {
-    background-color: var(--sds-clr-gray-01);
-    color: var(--sds-clr-lilac-11);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-}
-
-// =============================================================================
-// Tabs
-// =============================================================================
-.SkillsLanding__tabs {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: pxToRem(24px);
-  flex-wrap: wrap;
-  margin: 0 auto pxToRem(16px);
-}
-
-.SkillsLanding__tab {
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(14px);
-  font-weight: var(--sds-fw-medium);
-  border: none;
-  background: transparent;
-  padding: pxToRem(6px) pxToRem(2px);
-  cursor: pointer;
-  color: var(--sds-clr-gray-09);
-  transition: color var(--sds-anim-transition-default);
-  position: relative;
-
-  @media (hover: hover) {
-    &:hover {
-      color: var(--sds-clr-gray-11);
-    }
-  }
-
-  &[data-is-active="true"] {
-    color: var(--sds-clr-lilac-11);
-
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: pxToRem(2px);
-      background-color: var(--sds-clr-lilac-09);
-      border-radius: pxToRem(999px);
-    }
   }
 }
 
@@ -403,7 +265,25 @@
 .SkillsLanding__filterPanel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: pxToRem(12px);
+}
+
+// CSS-driven filtering: every card is rendered server-side; non-matching
+// entries hide based on the panel's data-active-filter. Keeps all 15 card
+// titles/descriptions/links in the HTML response so non-JS clients (AI
+// agents, search bots) see everything.
+.SkillsLanding__filterPanel:not([data-active-filter="All"])
+  .SkillsLanding__filterItem {
+  display: none;
+}
+
+@each $filter
+  in (Agentic Payments, Soroban, Frontend, Assets, APIs, Security, Standards, ZK, Ecosystem)
+{
+  .SkillsLanding__filterPanel[data-active-filter="#{$filter}"]
+    .SkillsLanding__filterItem[data-category="#{$filter}"] {
+    display: block;
+  }
 }
 
 // =============================================================================
@@ -480,32 +360,6 @@
       outline: none !important;
       box-shadow: none !important;
     }
-  }
-}
-
-.SkillsCard__expandedContent {
-  padding: 0 0 pxToRem(8px) 0;
-
-  p {
-    font-family: "Inter", sans-serif;
-    font-size: pxToRem(14px);
-    font-weight: 400;
-    line-height: pxToRem(20px);
-    margin: 0 0 pxToRem(8px) 0;
-    color: var(--sds-clr-gray-11);
-  }
-
-  ul {
-    margin: 0;
-    padding-left: pxToRem(20px);
-  }
-
-  li {
-    font-family: "Inter", sans-serif;
-    font-size: pxToRem(14px);
-    font-weight: 400;
-    line-height: pxToRem(24px);
-    color: var(--sds-clr-gray-11);
   }
 }
 
@@ -590,26 +444,32 @@ h2.SkillsCard__title {
   align-items: center;
   gap: pxToRem(8px);
   margin-bottom: pxToRem(4px);
+}
 
-  .Button {
-    flex-shrink: 0;
-    padding-left: 0;
-    padding-right: 0;
-    border-color: transparent !important;
-    background-color: transparent !important;
+.SkillsCard__sourceLink {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--sds-clr-gray-09);
+  text-decoration: none;
+  transition: color var(--sds-anim-transition-default);
 
-    @media (hover: hover) {
-      &:hover {
-        background-color: transparent !important;
-        color: var(--sds-clr-lilac-11) !important;
-      }
+  svg {
+    width: pxToRem(14px);
+    height: pxToRem(14px);
+    stroke: currentColor;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--sds-clr-lilac-11);
     }
+  }
 
-    &:focus,
-    &:focus-visible {
-      outline: none !important;
-      box-shadow: none !important;
-    }
+  &:focus-visible {
+    outline: 2px solid var(--sds-clr-lilac-11);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 }
 
@@ -678,66 +538,4 @@ h3.SkillsCard__title {
   color: var(--sds-clr-gray-12);
 }
 
-// =============================================================================
-// Modal
-// =============================================================================
-.Modal__container {
-  display: flex;
-  width: pxToRem(480px);
-  padding: pxToRem(16px);
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  gap: pxToRem(16px);
-  border-radius: pxToRem(8px);
-  border: 1px solid var(--sds-clr-gray-06, #E2E2E2);
-  background: var(--sds-clr-gray-01, #FCFCFC);
-  box-shadow: 0 pxToRem(10px) pxToRem(20px) pxToRem(-10px) rgba(0, 0, 0, 0.10);
-
-  .ModalBody {
-    padding-right: 0;
-  }
-
-  .SkillsModal__heading {
-    display: flex;
-    flex-direction: column;
-    gap: pxToRem(8px);
-    width: 100%;
-  }
-
-  .SkillsModal__title {
-    font-family: "Inter", sans-serif;
-    font-size: pxToRem(16px);
-    font-weight: 500;
-    line-height: pxToRem(24px);
-    margin: 0;
-    color: var(--sds-clr-gray-12);
-  }
-
-  p.SkillsModal__description {
-    font-family: var(--sds-ff-body) !important;
-    font-size: pxToRem(14px) !important;
-    font-weight: 400 !important;
-    line-height: pxToRem(20px) !important;
-    margin: 0 !important;
-    color: var(--sds-clr-gray-11) !important;
-  }
-
-  .Modal__heading {
-    margin-bottom: pxToRem(16px) !important;
-  }
-
-  .SkillsModal__sectionTitle {
-    font-family: var(--sds-ff-body);
-    font-size: pxToRem(14px);
-    font-weight: 500;
-    line-height: pxToRem(20px);
-    margin: 0 0 pxToRem(8px) 0;
-    color: var(--sds-clr-gray-12);
-  }
-}
-
-.Modal__background {
-  top: -1px;
-}
 
