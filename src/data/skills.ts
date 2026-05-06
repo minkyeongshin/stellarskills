@@ -75,6 +75,13 @@ export const SKILL_CARD_SOURCES: readonly SkillCardSource[] = [
     category: "All",
   },
   {
+    title: "Curated Resources",
+    description:
+      "Source-of-truth links for everything Stellar. Official docs, RPC and Horizon API references, client and contract SDKs, the Stellar CLI, oracle providers, security guides, and bug bounty programs.",
+    path: "/skills/resources.md",
+    category: "Ecosystem",
+  },
+  {
     title: "Build Smart Contracts",
     description:
       "Write Soroban smart contracts in Rust. Walks through project setup, storage types, authorization, constructors, cross-contract calls, events, error handling, and deployment with the Stellar CLI.",
@@ -163,13 +170,6 @@ export const SKILL_CARD_SOURCES: readonly SkillCardSource[] = [
     description:
       "Browse the Stellar ecosystem to find the right integration for your app. DeFi protocols like Blend and Soroswap, data services like Reflector and Mercury, OpenZeppelin contracts, wallets, oracles, and audit firms, with use cases and links.",
     path: "/skills/ecosystem.md",
-    category: "Ecosystem",
-  },
-  {
-    title: "Curated Resources",
-    description:
-      "Source-of-truth links for everything Stellar. Official docs, RPC and Horizon API references, client and contract SDKs, the Stellar CLI, oracle providers, security guides, and bug bounty programs.",
-    path: "/skills/resources.md",
     category: "Ecosystem",
   },
 ] as const;
