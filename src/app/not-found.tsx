@@ -3,14 +3,13 @@
 import { useRouter } from "next/navigation";
 import { Button, Card, Heading, Icon, Text } from "@stellar/design-system";
 
-import { Routes } from "@/constants/routes";
 import { Box } from "@/components/layout/Box";
 
 export default function NotFound() {
   const router = useRouter();
 
   const handleBackClick = () => {
-    router.push(Routes.ROOT);
+    router.push("/");
   };
 
   return (

@@ -1,21 +1,18 @@
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
-
-import { LayoutContextProvider } from "@/components/layout/LayoutContextProvider";
-import { WalletKitContextProvider } from "@/components/WalletKit/WalletKitContextProvider";
-import { CustomAiButton } from "@/components/CustomAiButton";
-
-import { QueryProvider } from "@/query/QueryProvider";
-import { StoreProvider } from "@/store/StoreProvider";
-import { GoogleAnalytics } from "@/metrics/GoogleAnalytics";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 import "@stellar/design-system/build/styles.min.css";
 import "@/styles/globals.scss";
 
+const GA_TRACKING_ENABLED =
+  process.env.NEXT_PUBLIC_DISABLE_GOOGLE_ANALYTICS !== "true" &&
+  process.env.NODE_ENV === "production";
+
 export const metadata: Metadata = {
-  title: "Stellar Lab",
+  title: "Stellar Skills",
   description:
-    "Explore Stellar Lab: Build, sign, and submit transactions. Access tools, Stellar RPC, Horizon, and more. Enhance your skills with Stellar Quest.",
+    "Agent-readable documentation for building on the Stellar network.",
 };
 
 // Automatically generates nonce for script and style tags
@@ -28,21 +25,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="sds-theme-light" data-sds-theme="sds-theme-light">
         <Suspense>
-          <div id="root">
-            <StoreProvider>
-              <QueryProvider>
-                <LayoutContextProvider>
-                  <WalletKitContextProvider>
-                    {children}
-                  </WalletKitContextProvider>
-                  <CustomAiButton />
-                </LayoutContextProvider>
-              </QueryProvider>
-            </StoreProvider>
-          </div>
-          <GoogleAnalytics />
+          <div id="root">{children}</div>
+          {GA_TRACKING_ENABLED && <GoogleTagManager gtmId="GTM-KCNDDL3" />}
         </Suspense>
       </body>
     </html>

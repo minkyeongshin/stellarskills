@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Badge,
@@ -11,43 +11,54 @@ import {
   ThemeSwitch,
 } from "@stellar/design-system";
 
-import { useStore } from "@/store/useStore";
 import { Hydration } from "@/components/Hydration";
-import { LOCAL_STORAGE_SAVED_THEME } from "@/constants/settings";
-import { ThemeColorType } from "@/types/types";
 
 import "./styles.scss";
 
+const LOCAL_STORAGE_SAVED_THEME = "stellarTheme:Laboratory";
+
 type ModeType = "human" | "agent";
 
-const ModeContent: Record<ModeType, { value: string; displayValue?: string }> = {
-  human: {
-    value: "Read stellarskills.com before you start building on Stellar.",
-  },
-  agent: {
-    value: "https://stellarskills.com/SKILL.md",
-    displayValue: "stellarskills.com/SKILL.md",
-  },
+const FALLBACK_ORIGIN = "https://stellarskills.com";
+
+const hostFromOrigin = (origin: string) => origin.replace(/^https?:\/\//, "");
+
+const getModeContent = (
+  origin: string,
+): Record<ModeType, { value: string; displayValue?: string }> => {
+  const host = hostFromOrigin(origin);
+  return {
+    human: {
+      value: `Read ${host} before you start building on Stellar.`,
+    },
+    agent: {
+      value: `${origin}/SKILL.md`,
+      displayValue: `${host}/SKILL.md`,
+    },
+  };
 };
 
-const SKILL_MD_CONTENT = `# Stellar Skills
+const getSkillMdContent = (origin: string) => {
+  const host = hostFromOrigin(origin);
+  return `# Stellar Skills
 
 Agent-readable documentation for building on the Stellar network.
 
 ## Available Skills
 
-- Soroban: stellarskills.com/soroban/SKILL.md
-- Wallets: stellarskills.com/wallets/SKILL.md
-- Security: stellarskills.com/security/SKILL.md
-- Testing: stellarskills.com/testing/SKILL.md
-- Trustlines: stellarskills.com/trustlines/SKILL.md
-- x402: stellarskills.com/x402/SKILL.md
-- MPP: stellarskills.com/mpp/SKILL.md
+- Soroban: ${host}/soroban/SKILL.md
+- Wallets: ${host}/wallets/SKILL.md
+- Security: ${host}/security/SKILL.md
+- Testing: ${host}/testing/SKILL.md
+- Trustlines: ${host}/trustlines/SKILL.md
+- x402: ${host}/x402/SKILL.md
+- MPP: ${host}/mpp/SKILL.md
 
 ## Usage
 
 Fetch any skill file to get detailed, up-to-date context for your AI agent.
 `;
+};
 
 type FilterType = "All" | "Soroban" | "Frontend" | "Assets" | "APIs" | "Security" | "Standards" | "ZK" | "Ecosystem";
 
@@ -61,109 +72,98 @@ type SkillCard = {
   category: FilterType;
 };
 
-const SkillCards: SkillCard[] = [
+type SkillCardSource = {
+  title: string;
+  description: string;
+  path: string;
+  category: FilterType;
+};
+
+const SkillCardSources: SkillCardSource[] = [
   {
     title: "Stellar Development Skill",
     description:
       "Stellar Development Skill helps you build apps on Stellar using Soroban smart contracts, frontend integrations, and ecosystem tools.",
-    pathLabel: "stellarskills.com/skill/SKILL.md",
-    copyValue: "https://stellarskills.com/skill/SKILL.md",
+    path: "/skill/SKILL.md",
     category: "All",
   },
   {
     title: "Build Smart Contracts",
-    description:
-      "Create Soroban contracts with Rust and WebAssembly.",
-    pathLabel: "stellarskills.com/skills/soroban/contracts-soroban.md",
-    copyValue: "https://stellarskills.com/skills/soroban/contracts-soroban.md",
+    description: "Create Soroban contracts with Rust and WebAssembly.",
+    path: "/skills/soroban/contracts-soroban.md",
     category: "Soroban",
   },
   {
     title: "Use Advanced Contract Patterns",
-    description:
-      "Apply scalable architecture and contract design patterns.",
-    pathLabel: "stellarskills.com/skills/soroban/advanced-patterns.md",
-    copyValue: "https://stellarskills.com/skills/soroban/advanced-patterns.md",
+    description: "Apply scalable architecture and contract design patterns.",
+    path: "/skills/soroban/advanced-patterns.md",
     category: "Soroban",
   },
   {
     title: "Avoid Common Pitfalls",
-    description:
-      "Prevent frequent errors in Soroban development flows.",
-    pathLabel: "stellarskills.com/skills/soroban/common-pitfalls.md",
-    copyValue: "https://stellarskills.com/skills/soroban/common-pitfalls.md",
+    description: "Prevent frequent errors in Soroban development flows.",
+    path: "/skills/soroban/common-pitfalls.md",
     category: "Soroban",
   },
   {
     title: "Integrate Stellar in Frontend Apps",
-    description:
-      "Build app flows with Stellar SDK and wallet support.",
-    pathLabel: "stellarskills.com/skills/frontend/frontend-stellar-sdk.md",
-    copyValue: "https://stellarskills.com/skills/frontend/frontend-stellar-sdk.md",
+    description: "Build app flows with Stellar SDK and wallet support.",
+    path: "/skills/frontend/frontend-stellar-sdk.md",
     category: "Frontend",
   },
   {
     title: "Test Contract Logic",
-    description:
-      "No description yet.",
-    pathLabel: "stellarskills.com/skills/soroban/testing.md",
-    copyValue: "https://stellarskills.com/skills/soroban/testing.md",
+    description: "No description yet.",
+    path: "/skills/soroban/testing.md",
     category: "Soroban",
   },
   {
     title: "Stellar Assets",
     description:
       "Stellar trustlines and assets—create, manage, authorize.",
-    pathLabel: "stellarskills.com/skills/assets/stellar-assets.md",
-    copyValue: "https://stellarskills.com/skills/assets/stellar-assets.md",
+    path: "/skills/assets/stellar-assets.md",
     category: "Assets",
   },
   {
     title: "API RPC Horizon",
     description:
       "Stellar APIs for network data—RPC, Horizon, and fetching accounts, transactions, and ledgers.",
-    pathLabel: "stellarskills.com/skills/apis/api-rpc-horizon.md",
-    copyValue: "https://stellarskills.com/skills/apis/api-rpc-horizon.md",
+    path: "/skills/apis/api-rpc-horizon.md",
     category: "APIs",
   },
   {
     title: "Security",
     description:
       "Soroban smart contract security—vulnerabilities, access control, reentrancy.",
-    pathLabel: "stellarskills.com/skills/security/security.md",
-    copyValue: "https://stellarskills.com/skills/security/security.md",
+    path: "/skills/security/security.md",
     category: "Security",
   },
   {
     title: "Standards Reference",
     description:
       "Stellar SEPs and standards—implementations, interoperability, compliance.",
-    pathLabel: "stellarskills.com/skills/standards/standards-reference.md",
-    copyValue: "https://stellarskills.com/skills/standards/standards-reference.md",
+    path: "/skills/standards/standards-reference.md",
     category: "Standards",
   },
   {
     title: "ZK Proofs",
     description:
       "Zero-knowledge proofs on Stellar—privacy transactions and Soroban verification.",
-    pathLabel: "stellarskills.com/skills/zk/zk-proofs.md",
-    copyValue: "https://stellarskills.com/skills/zk/zk-proofs.md",
+    path: "/skills/zk/zk-proofs.md",
     category: "ZK",
   },
   {
     title: "Ecosystem",
     description:
       "Stellar ecosystem tools and services. Covers anchors, wallets, exchanges, and third-party integrations.",
-    pathLabel: "stellarskills.com/skills/ecosystem/ecosystem.md",
-    copyValue: "https://stellarskills.com/skills/ecosystem/ecosystem.md",
+    path: "/skills/ecosystem/ecosystem.md",
     category: "Ecosystem",
   },
   {
     title: "Resources",
     description:
       "Curated resources for Stellar development. Covers documentation, tutorials, community channels, and developer tools.",
-    pathLabel: "stellarskills.com/skills/ecosystem/resources.md",
-    copyValue: "https://stellarskills.com/skills/ecosystem/resources.md",
+    path: "/skills/ecosystem/resources.md",
     category: "Ecosystem",
   },
 ];
@@ -271,52 +271,31 @@ export default function LandingPage() {
   const urlMode = searchParams.get("mode");
   const mode: ModeType = urlMode === "agent" ? "agent" : "human";
 
-  const { setTheme } = useStore();
   const [activeFilter, setActiveFilter] = useState<FilterType>("All");
+  const [origin, setOrigin] = useState<string>(FALLBACK_ORIGIN);
 
-  const activeModeContent = ModeContent[mode];
-
-  // Make sure we always have the theme set in the store
   useEffect(() => {
-    const attr = "data-sds-theme";
-    const getVal = () => document.body.getAttribute(attr);
+    setOrigin(window.location.origin);
+  }, []);
 
-    const currentTheme = getVal();
+  const skillCards = useMemo<SkillCard[]>(() => {
+    const host = hostFromOrigin(origin);
+    return SkillCardSources.map((s) => ({
+      title: s.title,
+      description: s.description,
+      category: s.category,
+      pathLabel: `${host}${s.path}`,
+      copyValue: `${origin}${s.path}`,
+    }));
+  }, [origin]);
 
-    if (currentTheme) {
-      setTheme(currentTheme as ThemeColorType);
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
-      const theme = getVal();
-
-      if (theme) {
-        observer.disconnect();
-        setTheme(theme as ThemeColorType);
-      }
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: [attr],
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [setTheme]);
-
-  const handleThemeChange = (isDarkMode: boolean) => {
-    const theme = isDarkMode ? "sds-theme-dark" : "sds-theme-light";
-    setTheme(theme);
-  };
+  const activeModeContent = getModeContent(origin)[mode];
 
   // Agent mode: show raw SKILL.md content only
   if (mode === "agent") {
     return (
       <div className="SkillsLanding__agentView">
-        <pre className="SkillsLanding__agentContent">{SKILL_MD_CONTENT}</pre>
+        <pre className="SkillsLanding__agentContent">{getSkillMdContent(origin)}</pre>
       </div>
     );
   }
@@ -331,10 +310,7 @@ export default function LandingPage() {
 
         <div className="SkillsLanding__headerActions">
           <Hydration>
-            <ThemeSwitch
-              storageKeyId={LOCAL_STORAGE_SAVED_THEME}
-              onActionEnd={handleThemeChange}
-            />
+            <ThemeSwitch storageKeyId={LOCAL_STORAGE_SAVED_THEME} />
           </Hydration>
 
           <Button
@@ -363,13 +339,13 @@ export default function LandingPage() {
 
         <section className="SkillsLanding__cards" aria-label="Skills list" data-fixed-height={activeFilter !== "All"}>
           {/* First card - always visible */}
-          <Card key={SkillCards[0].title}>
+          <Card key={skillCards[0].title}>
             <div className="SkillsCard">
-              <h2 className="SkillsCard__title">{SkillCards[0].title}</h2>
+              <h2 className="SkillsCard__title">{skillCards[0].title}</h2>
 
-              <p className="SkillsCard__description">{SkillCards[0].description}</p>
+              <p className="SkillsCard__description">{skillCards[0].description}</p>
 
-              <CopyPathButton pathLabel={SkillCards[0].pathLabel} copyValue={SkillCards[0].copyValue} />
+              <CopyPathButton pathLabel={skillCards[0].pathLabel} copyValue={skillCards[0].copyValue} />
             </div>
           </Card>
 
@@ -391,7 +367,7 @@ export default function LandingPage() {
           </div>
 
           {/* Filtered skill cards */}
-          {SkillCards.slice(1)
+          {skillCards.slice(1)
             .filter((c) => activeFilter === "All" || c.category === activeFilter)
             .slice(0, activeFilter === "All" ? undefined : 5)
             .map((c, idx) => (

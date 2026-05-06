@@ -1,14 +1,10 @@
 "use client";
-import type { NextPage } from "next";
-import type { ErrorProps } from "next/error";
-import NextError from "next/error";
 
 import { Button, Card, Heading, Icon, Text } from "@stellar/design-system";
 import { Box } from "@/components/layout/Box";
-import { openUrl } from "@/helpers/openUrl";
 
-const Error: NextPage<ErrorProps> = () => (
-  <>
+export default function Error() {
+  return (
     <Card>
       <Box gap="xl" align="start">
         <Box gap="md">
@@ -41,7 +37,11 @@ const Error: NextPage<ErrorProps> = () => (
             variant="primary"
             iconPosition="left"
             onClick={() =>
-              openUrl("https://github.com/stellar/laboratory/issues")
+              window.open(
+                "https://github.com/stellar/laboratory/issues",
+                "_blank",
+                "noopener,noreferrer",
+              )
             }
           >
             Open Issue
@@ -49,20 +49,5 @@ const Error: NextPage<ErrorProps> = () => (
         </Box>
       </Box>
     </Card>
-  </>
-);
-
-Error.getInitialProps = async (contextData) => {
-  // Only send to Sentry in production and for truly unhandled errors
-  if (process.env.NODE_ENV === "production") {
-    // In case this is running in a serverless function, await this in order to give Sentry
-    // time to send the error before the lambda exits
-    const Sentry = await import("@sentry/nextjs");
-    await Sentry.captureUnderscoreErrorException(contextData);
-  }
-
-  // This will contain the status code of the response
-  return NextError.getInitialProps(contextData);
-};
-
-export default Error;
+  );
+}
