@@ -1,125 +1,123 @@
 # Claude Code Instructions for Stellar Skills
 
-## What this repo is
+A single static landing page at
+[stellarskills.com](https://stellarskills.com) listing agent-readable
+Stellar developer documentation. See [README.md](README.md) for the
+public-facing overview.
 
-A single-page marketing/directory site at
-[stellarskills.com](https://stellarskills.com) that lists "skills" — markdown
-files of Stellar developer documentation written to be fetched and consumed by
-AI agents. The repo was forked from
-[Stellar Lab](https://github.com/stellar/laboratory) and almost all of the Lab
-source has been deleted. See [README.md](README.md) for the public-facing
-overview and setup steps.
+## SSR is the point
+
+The page is a server component, statically generated at build time
+(`○` in the Next.js output). The full HTML returned by `GET /` already
+contains every card's title, description, URL, and `data-category`. AI
+agents and crawlers do not need to run JavaScript. The same data builds
+`public/llms.txt`. Both UI and llms.txt read from `src/data/skills.ts`.
+
+When making changes: anything that should be visible to agents must
+render on the server in `src/app/page.tsx` or `src/app/_components/SkillCard.tsx`.
+Don't move card data into a client component.
+
+## Where things live
+
+- `src/data/skills.ts`: single source of truth.
+  `SKILL_CARD_SOURCES` (main list), `ECOSYSTEM_CARDS` (community
+  section), `FilterType` / `FILTERS` (category tabs).
+- `src/app/page.tsx`: server-rendered landing page.
+- `src/app/_components/`: small client islands (`CopyButton`,
+  `SkillCard`, `SkillsFilter`, `HeaderActions`). The filter is a
+  CSS-driven tablist keyed off `data-category`.
+- `scripts/fetch-skills.mjs`: downloads upstream markdown into
+  `public/skills/` at build time.
+- `scripts/generate-llms-txt.mjs`: writes `public/llms.txt` from
+  `src/data/skills.ts`.
+- `next.config.js`: holds CSP (`frame-ancestors *`). No middleware.
+
+There is no routing beyond `/`, no API routes, no backend, no test
+runner.
 
 ## Quick reference
 
 ```bash
-pnpm install
-pnpm dev             # next dev (predev fetches skill markdown if needed)
-pnpm build           # production build (prebuild always refetches)
-pnpm start           # serve production build
-pnpm lint            # next lint (eslint)
-pnpm lint:ts         # tsc --noEmit
-pnpm fetch:skills    # manually refresh skill markdown from upstream
+pnpm dev                # predev: cached fetch + regen llms.txt
+pnpm build              # prebuild: strict fetch + regen llms.txt
+pnpm lint               # eslint
+pnpm lint:ts            # tsc --noEmit
+pnpm fetch:skills       # refresh public/skills/ from upstream
+pnpm generate:llms-txt  # regenerate public/llms.txt
 ```
 
-There is no test runner configured. There are no e2e tests.
+## Upstream sync
 
-## Architecture
+Skill markdown lives in
+[`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill).
+`fetch-skills.mjs` maps each `SKILL_CARD_SOURCES` entry by the basename
+of its `path` to a file under `skill/` upstream. Override the ref via
+`SKILLS_REF` (default `main`).
 
-The entire app is essentially:
+**Upstream changes are not auto-deployed.** No webhook, no scheduled
+job. The only CI workflow runs on push/PR to this repo. Upstream edits
+reach production only when someone pushes a commit to `main` or hits
+"Redeploy" in Vercel. Locally, `pnpm dev` reuses cached files until you
+run `pnpm fetch:skills`.
 
-- `src/app/layout.tsx` — root layout, imports Stellar Design System styles,
-  optionally loads Google Tag Manager in production. Server component.
-- `src/app/page.tsx` — the landing page. Client component (`"use client"`).
-  Renders a hero, a filterable grid of skill `Card`s, and an "Ecosystem"
-  section. Also supports `?mode=agent` which returns a raw `SKILL.md`-style
-  text dump.
-- `src/data/skills.ts` — the data behind the cards: `SKILL_CARD_SOURCES`
-  (filterable main list), `ECOSYSTEM_CARDS` (community section), and the
-  `FilterType` / `FILTERS` category tabs.
-- `src/app/error.tsx`, `not-found.tsx`, `global-error.tsx` — standard Next.js
-  error boundaries using design system components.
-- `src/components/Hydration.tsx` — small wrapper that delays children until
-  after client hydration (used to gate `ThemeSwitch`).
-- `src/components/layout/Box/` — thin flex/grid wrapper carried over from
-  Stellar Lab.
-- `src/styles/globals.scss` + `src/app/styles.scss` — all styling.
-- `src/middleware.ts` does not exist. CSP is set via `headers()` in
-  `next.config.js` (`frame-ancestors *` to allow iframe embedding).
-- `public/skill/` and `public/skills/` are populated at build time by
-  `scripts/fetch-skills.mjs`, which downloads markdown from
-  [`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill).
-  Both directories are gitignored. Don't commit anything under them.
+If a markdown file is removed upstream while still listed in
+`SKILL_CARD_SOURCES`, `pnpm build` fails with a "missing path" error.
+Restore it upstream or remove the entry here.
 
-That's the whole app. There is no routing beyond `/`, no API routes, no
-backend.
+`ECOSYSTEM_CARDS` link to external URLs and do not touch the fetch
+pipeline.
 
-## Skill content pipeline
+## Adding a skill
 
-The skill markdown files served by this site are not stored here. They live
-in `stellar/stellar-dev-skill` (flat layout: `skill/<file>.md`). The fetch
-script maps each entry in `SKILL_CARD_SOURCES` by filename — the basename of
-the `path` field is looked up in the upstream `skill/` directory.
+**Main list:** add `skill/<your-skill>.md` upstream first, then append to
+`SKILL_CARD_SOURCES`:
 
-- `predev` runs the script with `--cached --lenient` (skip if files exist;
-  warn on missing).
-- `prebuild` runs it strict (always fetch; fail on any missing file).
-- Override the ref via `SKILLS_REF=<branch|tag|sha>`; defaults to `main`.
+```ts
+{
+  title: "Your Skill Title",
+  description: "Verb-led summary of what this skill teaches.",
+  path: "/skills/<your-skill>.md",
+  category: "Soroban", // any FilterType value
+}
+```
 
-If asked to add a new skill card, the matching markdown file must already
-exist in `stellar/stellar-dev-skill` — adding only an entry here will fail
-the next `pnpm build`.
+`pnpm fetch:skills && pnpm dev` to verify. New category? Add it to the
+`FilterType` union and the `FILTERS` array.
 
-## Conventions to follow
+**Ecosystem:** external link, no upstream fetch.
 
-- Use `@stellar/design-system` components (`Button`, `Card`, `Icon`, `Logo`,
-  `Badge`, `ThemeSwitch`, etc.) — don't hand-roll UI primitives.
-- Style via SCSS files; never use inline `style={}`.
-- Use the `@/` path alias for imports from `src/` (configured in
-  `tsconfig.json`).
-- Page components that use hooks / `window` / `useSearchParams` need
-  `"use client"`.
-- Naming: PascalCase for components, camelCase for helpers, `use` prefix for
-  hooks.
+```ts
+{
+  title: "Project Name",
+  description: "Verb-led summary of what the skill does.",
+  pathLabel: "owner/repo",
+  copyValue: "https://github.com/owner/repo/blob/main/path/to/SKILL.md",
+  category: "Ecosystem",
+}
+```
 
-## What NOT to do
+## Conventions
 
-The original Lab CLAUDE.md described many patterns that no longer exist here.
-Do not reintroduce them unless explicitly asked:
+- Use `@stellar/design-system` components; don't hand-roll UI primitives.
+- SCSS files only; no inline `style={}`.
+- `@/` path alias for imports from `src/`.
+- `"use client"` only for components using hooks, `window`, or
+  `useSearchParams`.
+- PascalCase components, camelCase helpers, `use` prefix for hooks.
+- Skill descriptions: lead with a verb, list concrete topics, no em-dashes.
 
-- No Zustand store, no `zustand-querystring`, no `StoreProvider`. Use plain
-  `useState` / `useSearchParams` for the small amount of UI state this page
-  needs.
-- No TanStack React Query, no `useRpc*` / `useGetRpc*` hooks, no Horizon
-  hooks. The app makes no network requests.
-- No `@stellar/stellar-sdk`, no XDR helpers, no transaction / keypair /
-  contract logic. None of `src/helpers/`, `src/query/`, `src/store/`,
-  `src/validate/`, `src/hooks/`, or `src/constants/networkLimits.ts` exists
-  anymore.
-- No Jest, no Playwright, no Sentry, no Husky pre-commit hooks. Don't add a
-  `pnpm test` script unless the user asks.
-- No CSP nonce middleware. Iframe / CSP behavior lives in `next.config.js` —
-  edit that file if you need to change headers.
+## Don't add
 
-## Adding or editing skill cards
+- No state libraries (Zustand, React Query). Plain `useState` is enough.
+- No `@stellar/stellar-sdk`, no XDR, no transaction logic. The app makes
+  no network requests at runtime.
+- No Jest, Playwright, Sentry, or pre-commit hooks unless asked.
+- No middleware. CSP lives in `next.config.js`.
 
-Skill data lives in `src/data/skills.ts`:
+## Before merging
 
-- `SKILL_CARD_SOURCES` drives the main filterable list.
-- `ECOSYSTEM_CARDS` drives the community section.
-- `FilterType` / `FILTERS` define the category tabs — keep them in sync if
-  you add a new category.
-
-Each card's copy button produces `https://stellarskills.com<path>`. The
-corresponding markdown file is fetched from `stellar/stellar-dev-skill` at
-build time (see "Skill content pipeline" above). Don't try to commit
-markdown into `public/skill/` or `public/skills/` — those are gitignored
-and overwritten on every build.
-
-## Task completion checklist
-
-- [ ] `pnpm lint:ts` passes
-- [ ] `pnpm lint` passes
-- [ ] `pnpm build` succeeds
-- [ ] No new `style={}` props, no new global state libraries
-- [ ] No reintroduction of Lab-era code paths
+- `pnpm lint:ts` passes
+- `pnpm lint` passes
+- `pnpm build` succeeds
+- Card data still rendered server-side (visible in `curl /`)
+- No em-dashes in descriptions or docs
