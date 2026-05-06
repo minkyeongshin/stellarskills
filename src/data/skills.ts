@@ -188,4 +188,30 @@ export const ECOSYSTEM_CARDS: readonly EcosystemCardSource[] = [
       "https://github.com/OpenZeppelin/openzeppelin-skills/blob/main/skills/setup-stellar-contracts/SKILL.md",
     category: "Ecosystem",
   },
+  {
+    title: "DeFindex SDK",
+    description:
+      "Integrate DeFindex vaults on Stellar with the @defindex/sdk TypeScript package. Covers vault deposits and withdrawals, balance and APY queries, programmatic vault creation, and the unsigned-XDR signing pattern for backend and bot integrations.",
+    pathLabel: "paltalabs/defindex-sdk",
+    copyValue:
+      "https://github.com/paltalabs/defindex-sdk/blob/main/defindex-sdk-skill.md",
+    category: "Ecosystem",
+  },
+  {
+    title: "Soroswap SDK",
+    description:
+      "Trade on Soroswap DEX from a backend, bot, or swap widget using the @soroswap/sdk TypeScript package. Covers token swaps, liquidity pool operations, price and route queries, API key handling, and signing flows for both server keypairs and browser wallets.",
+    pathLabel: "soroswap/sdk",
+    copyValue: "https://github.com/soroswap/sdk/blob/main/soroswap-sdk-skill.md",
+    category: "Ecosystem",
+  },
+  {
+    title: "Trustless Work Escrow",
+    description:
+      "Build escrow and milestone-based payment workflows on Stellar with the Trustless Work platform. Covers single-release and multi-release escrows, trustline configuration, dispute handling, and three integration paths: REST API, React SDK hooks, and pre-built Blocks UI components.",
+    pathLabel: "Trustless-Work/trustless-work-dev-skill",
+    copyValue:
+      "https://github.com/Trustless-Work/trustless-work-dev-skill/blob/main/SKILL.md",
+    category: "Ecosystem",
+  },
 ] as const;
