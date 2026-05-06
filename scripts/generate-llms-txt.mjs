@@ -79,14 +79,18 @@ if (skillCards.length === 0) {
   process.exit(1);
 }
 
+// Pinned to a "Start here" section at the top regardless of category, then
+// excluded from the per-category sections below so they don't double-render.
+// Order here is the order shown.
+const FEATURED_PATHS = ["/skills/SKILL.md", "/skills/resources.md"];
+const isFeatured = (c) => FEATURED_PATHS.includes(c.path);
+
 const byCategory = new Map();
 for (const c of skillCards) {
-  if (!c.category) continue;
+  if (!c.category || isFeatured(c)) continue;
   if (!byCategory.has(c.category)) byCategory.set(c.category, []);
   byCategory.get(c.category).push(c);
 }
-
-const sectionTitle = (filter) => (filter === "All" ? "Overview" : filter);
 
 const lines = [];
 lines.push("# Stellar Skills");
@@ -96,10 +100,26 @@ lines.push(
 );
 lines.push("");
 
+const featuredCards = FEATURED_PATHS.map((p) =>
+  skillCards.find((c) => c.path === p),
+).filter(Boolean);
+if (featuredCards.length > 0) {
+  lines.push("## Start here");
+  lines.push("");
+  lines.push(
+    "Read these two first. The umbrella skill orients your agent on Stellar overall; the curated resources list points it at the official source-of-truth docs, SDKs, and APIs it should rely on for everything else.",
+  );
+  lines.push("");
+  for (const c of featuredCards) {
+    lines.push(`- [${c.title}](${ORIGIN}${c.path}): ${c.description}`);
+  }
+  lines.push("");
+}
+
 for (const filter of filters) {
   const cards = byCategory.get(filter);
   if (!cards || cards.length === 0) continue;
-  lines.push(`## ${sectionTitle(filter)}`);
+  lines.push(`## ${filter}`);
   lines.push("");
   for (const c of cards) {
     if (!c.path) continue;
