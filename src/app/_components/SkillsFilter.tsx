@@ -1,19 +1,21 @@
 "use client";
 
-import { KeyboardEvent, ReactNode, useRef, useState } from "react";
-
-import type { FilterType } from "@/data/skills";
+import { KeyboardEvent, ReactNode, useId, useRef, useState } from "react";
 
 type Props = {
-  filters: readonly FilterType[];
+  filters: readonly string[];
+  /** Optional starting tab. Defaults to the first item in `filters`. */
+  defaultFilter?: string;
+  /** Class applied to the tabpanel. Lets each independent use of this
+   * component target its own CSS-driven show/hide rules. */
+  panelClassName?: string;
+  /** aria-label for the tablist. */
+  ariaLabel?: string;
   /** Pre-rendered card markup (server). Each child should carry a
    * `data-category` attribute matching one of `filters` so CSS can hide
    * non-matching cards based on the panel's `data-active-filter`. */
   children: ReactNode;
 };
-
-const FILTER_PANEL_ID = "skills-filter-panel";
-const filterTabId = (filter: FilterType) => `skills-filter-tab-${filter}`;
 
 /**
  * Client island that owns the active-filter state and the ARIA tablist
@@ -22,13 +24,27 @@ const filterTabId = (filter: FilterType) => `skills-filter-tab-${filter}`;
  * filter` attribute on the wrapping panel so CSS can hide non-matching
  * entries.
  *
+ * Each instance scopes its tab/panel ARIA wiring with `useId()` so
+ * multiple independent tablists can coexist on the same page (skills
+ * filter + installer filter).
+ *
  * @see https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
  */
-export const SkillsFilter = ({ filters, children }: Props) => {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("All");
-  const tabRefs = useRef<Record<FilterType, HTMLButtonElement | null>>(
-    {} as Record<FilterType, HTMLButtonElement | null>,
+export const SkillsFilter = ({
+  filters,
+  defaultFilter,
+  panelClassName = "SkillsLanding__filterPanel",
+  ariaLabel = "Filter skills",
+  children,
+}: Props) => {
+  const baseId = useId();
+  const panelId = `${baseId}-panel`;
+  const tabId = (filter: string) => `${baseId}-tab-${filter}`;
+
+  const [activeFilter, setActiveFilter] = useState<string>(
+    defaultFilter ?? filters[0],
   );
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const handleTabKeyDown = (
     event: KeyboardEvent<HTMLButtonElement>,
@@ -58,7 +74,7 @@ export const SkillsFilter = ({ filters, children }: Props) => {
       <div
         className="SkillsLanding__filters"
         role="tablist"
-        aria-label="Filter skills"
+        aria-label={ariaLabel}
       >
         {filters.map((filter, index) => {
           const isActive = activeFilter === filter;
@@ -67,8 +83,8 @@ export const SkillsFilter = ({ filters, children }: Props) => {
               key={filter}
               type="button"
               role="tab"
-              id={filterTabId(filter)}
-              aria-controls={FILTER_PANEL_ID}
+              id={tabId(filter)}
+              aria-controls={panelId}
               aria-selected={isActive}
               tabIndex={isActive ? 0 : -1}
               ref={(el) => {
@@ -87,9 +103,9 @@ export const SkillsFilter = ({ filters, children }: Props) => {
 
       <div
         role="tabpanel"
-        id={FILTER_PANEL_ID}
-        aria-labelledby={filterTabId(activeFilter)}
-        className="SkillsLanding__filterPanel"
+        id={panelId}
+        aria-labelledby={tabId(activeFilter)}
+        className={panelClassName}
         data-active-filter={activeFilter}
       >
         {children}

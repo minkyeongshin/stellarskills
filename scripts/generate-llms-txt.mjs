@@ -8,33 +8,22 @@
  * even if they can't run JS to read the landing page.
  *
  * Title and description default to upstream frontmatter / first H1 of
- * each SKILL.md (parsed from public/<source>); overrides in skills.ts
- * take precedence. Runs after fetch-skills.mjs, so the markdown is
- * already on disk.
- *
- * Origin resolution (highest to lowest priority):
- *   SITE_ORIGIN                       manual override
- *   VERCEL_PROJECT_PRODUCTION_URL     canonical production domain on Vercel
- *   VERCEL_URL                        per-deployment URL on Vercel
- *   "http://localhost:3000"           local default
+ * each SKILL.md (parsed via src/lib/skill-meta.mjs, shared with
+ * src/app/page.tsx); overrides in skills.ts take precedence. Runs after
+ * fetch-skills.mjs, so the markdown is already on disk.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { readSkillMeta } from "../src/lib/skill-meta.mjs";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(__dirname);
-const PUBLIC_DIR = join(ROOT, "public");
 const SKILLS_DATA_FILE = join(ROOT, "src/data/skills.ts");
-const OUT_FILE = join(PUBLIC_DIR, "llms.txt");
+const OUT_FILE = join(ROOT, "public", "llms.txt");
 
-const ORIGIN =
-  process.env.SITE_ORIGIN ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000");
+const ORIGIN = process.env.SITE_ORIGIN || "http://localhost:3000";
 
 const source = readFileSync(SKILLS_DATA_FILE, "utf8");
 
@@ -59,7 +48,6 @@ const parseArray = (arrayName) => {
       source: get("source"),
       title: get("title"),
       description: get("description"),
-      path: get("path"),
       copyValue: get("copyValue"),
       category: get("category"),
     });
@@ -74,47 +62,16 @@ const parseFilters = () => {
   return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
 };
 
-/**
- * Mirror src/lib/skill-meta.ts: parse the upstream SKILL.md's frontmatter
- * `description` and first `# heading` so the llms.txt index uses the same
- * defaults as the rendered page.
- */
-const readMeta = (sourcePath) => {
-  const filePath = join(PUBLIC_DIR, sourcePath);
-  if (!existsSync(filePath)) return { title: null, description: null };
-  const content = readFileSync(filePath, "utf8");
-  const fmMatch = /^---\s*\n([\s\S]*?)\n---\s*\n?/.exec(content);
-  let description = null;
-  let body = content;
-  if (fmMatch) {
-    body = content.slice(fmMatch[0].length);
-    for (const line of fmMatch[1].split("\n")) {
-      const kv = /^([\w-]+):\s*(.*)$/.exec(line);
-      if (!kv) continue;
-      if (kv[1] === "description") {
-        let value = kv[2].trim();
-        if (
-          (value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))
-        ) {
-          value = value.slice(1, -1);
-        }
-        description = value;
-        break;
-      }
-    }
-  }
-  const h1 = /^#\s+(.+)$/m.exec(body);
-  return { title: h1 ? h1[1].trim() : null, description };
-};
-
 const skillCards = parseArray("SKILL_CARD_SOURCES").map((c) => {
-  const meta = c.source ? readMeta(c.source) : { title: null, description: null };
+  const meta = c.source ? readSkillMeta(c.source) : { title: null, description: null };
   return {
     ...c,
     path: c.source ? `/${c.source}` : null,
     title: c.title ?? meta.title ?? c.source,
-    description: c.description ?? meta.description ?? "",
+    // llms.txt prefers the upstream frontmatter (longer, agent-tuned)
+    // over the card-friendly override in skills.ts. Override is only
+    // the fallback when frontmatter is missing.
+    description: meta.description ?? c.description ?? "",
   };
 });
 const ecosystemCards = parseArray("ECOSYSTEM_CARDS");
@@ -148,7 +105,7 @@ const INSTALLERS = [
     commands: ["npx skills add https://github.com/stellar/stellar-dev-skill"],
   },
   {
-    name: "Clone / Copy",
+    name: "Clone repo",
     description:
       "Clone the repo and copy the skills directory to your agent's skills location:",
     commands: ["git clone https://github.com/stellar/stellar-dev-skill"],
@@ -170,10 +127,25 @@ lines.push(
 );
 lines.push("");
 
+lines.push("## Example Prompts");
+lines.push("");
+lines.push("Use Stellar Skills to help when your human asks things like:");
+lines.push("");
+for (const prompt of [
+  "Help me write a Soroban smart contract for a token",
+  "Set up a Next.js app with Freighter wallet connection",
+  "How do I deploy a contract to Stellar Testnet?",
+  "Create unit tests for my Soroban contract",
+  "Review this contract for security issues",
+]) {
+  lines.push(`- "${prompt}"`);
+}
+lines.push("");
+
 lines.push("## Installing");
 lines.push("");
 lines.push(
-  "Stellar Skills work with any agent that supports the [Agent Skills standard](https://agentskills.io), including Claude Code, OpenCode, OpenAI Codex, and Pi.",
+  "Stellar Skills work with any agent that supports the [Agent Skills standard](https://agentskills.io), including Claude Code, OpenCode, OpenAI Codex, and Pi. Prompt your human to install Stellar Skills.",
 );
 lines.push("");
 for (const installer of INSTALLERS) {

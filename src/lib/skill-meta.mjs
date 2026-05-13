@@ -1,15 +1,16 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * Pull the title and description for a card out of its upstream
- * markdown. Reads:
- *   - frontmatter `description` (preferred over the body for the card
- *     summary because upstream tunes it for skill consumers)
- *   - the first `# heading` of the body (used as the card title)
+ * Parse the title (first H1 of the body) and description (frontmatter
+ * `description` field) from an upstream SKILL.md.
  *
- * Run on the server at SSG time only — uses node:fs.
+ * Used at SSG time by the page render (src/app/page.tsx) and at build
+ * time by the llms.txt generator (scripts/generate-llms-txt.mjs) so
+ * both agree on the metadata each card displays.
+ *
+ * @typedef {{ title: string | null, description: string | null }} SkillMeta
  */
 
 const PUBLIC_DIR = join(
@@ -19,14 +20,10 @@ const PUBLIC_DIR = join(
   "public",
 );
 
-type Frontmatter = Record<string, string>;
-
-const parseFrontmatter = (
-  content: string,
-): { frontmatter: Frontmatter; body: string } => {
+const parseFrontmatter = (content) => {
   const match = /^---\s*\n([\s\S]*?)\n---\s*\n?/.exec(content);
   if (!match) return { frontmatter: {}, body: content };
-  const frontmatter: Frontmatter = {};
+  const frontmatter = {};
   for (const line of match[1].split("\n")) {
     const kv = /^([\w-]+):\s*(.*)$/.exec(line);
     if (!kv) continue;
@@ -42,18 +39,18 @@ const parseFrontmatter = (
   return { frontmatter, body: content.slice(match[0].length) };
 };
 
-const firstH1 = (body: string): string | null => {
+const firstH1 = (body) => {
   const m = /^#\s+(.+)$/m.exec(body);
   return m ? m[1].trim() : null;
 };
 
-export type SkillMeta = {
-  title: string | null;
-  description: string | null;
-};
-
-export const readSkillMeta = (source: string): SkillMeta => {
+/**
+ * @param {string} source - upstream path like "skills/soroban/SKILL.md"
+ * @returns {SkillMeta}
+ */
+export const readSkillMeta = (source) => {
   const filePath = join(PUBLIC_DIR, source);
+  if (!existsSync(filePath)) return { title: null, description: null };
   const content = readFileSync(filePath, "utf8");
   const { frontmatter, body } = parseFrontmatter(content);
   return {

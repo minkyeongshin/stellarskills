@@ -22,20 +22,20 @@ Don't move card data into a client component.
 - `src/data/skills.ts`: single source of truth.
   `SKILL_CARD_SOURCES` (main list), `ECOSYSTEM_CARDS` (community
   section), `FilterType` / `FILTERS` (category tabs).
-- `src/lib/skill-meta.ts`: parses each upstream SKILL.md's frontmatter
+- `src/lib/skill-meta.mjs`: parses each upstream SKILL.md's frontmatter
   `description` and first `# heading` so cards default to upstream
   metadata when `title` / `description` aren't overridden in skills.ts.
+  Shared by `src/app/page.tsx` and `scripts/generate-llms-txt.mjs`.
 - `src/app/page.tsx`: server-rendered landing page.
 - `src/app/_components/`: `SkillCard` (server), `icons` (server, inline
   SVGs), `CopyButton` / `SkillsFilter` / `ThemeSwitchIsland` (client
   islands). The filter is a CSS-driven tablist keyed off `data-category`.
-- `scripts/fetch-skills.mjs`: downloads upstream markdown into
-  `public/skills/` at build time. Validates `SKILLS_REF` against
-  `[A-Za-z0-9._/-]+` and uses `spawn("tar")` (no shell) to avoid
-  injection via env vars.
+- `scripts/fetch-skills.mjs`: downloads upstream `main` markdown into
+  `public/skills/` at build time. Uses `spawn("tar")` (no shell) so
+  the tarball stream never touches a shell interpreter.
 - `scripts/generate-llms-txt.mjs`: writes `public/llms.txt` from
-  `src/data/skills.ts`. Mirrors the frontmatter-fallback logic in
-  `src/lib/skill-meta.ts` so the index and the page agree.
+  `src/data/skills.ts`. Imports the frontmatter parser from
+  `src/lib/skill-meta.mjs` so the index and the page agree.
 - `next.config.js`: scoped `frame-ancestors`, plus
   `X-Content-Type-Options: nosniff` and `Referrer-Policy`. No
   middleware.
@@ -60,22 +60,14 @@ Skill markdown lives in
 [`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill).
 Each `SKILL_CARD_SOURCES` entry carries a `source` field — an
 upstream-relative path like `skills/soroban/SKILL.md` — and
-`fetch-skills.mjs` mirrors that path verbatim into `public/`, so the
-upstream layout drives the site URL.
+`fetch-skills.mjs` downloads `main` and mirrors that path verbatim into
+`public/`, so the upstream layout drives the site URL.
 
-`SKILLS_REF` (default `main`) selects the upstream ref and is read in
-two places at build time: `fetch-skills.mjs` (which markdown to
-download) and `src/app/page.tsx` (per-card "view source" link target).
-Both stay in lockstep so the GitHub link points at the exact file the
-site is serving. For production, pin `SKILLS_REF` to a commit SHA in
-the Vercel env. See README.md → "Pinning the upstream version" for the
-full operator workflow.
-
-**Upstream changes are not auto-deployed.** No webhook, no scheduled
-job. The only CI workflow runs on push/PR to this repo. Upstream edits
-reach production only when someone pushes a commit to `main` or hits
-"Redeploy" in Vercel. Locally, `pnpm dev` reuses cached files until you
-run `pnpm fetch:skills`.
+This sync layer is temporary. The plan is to colocate the site under
+`/site` of the skills repo, at which point `fetch-skills.mjs` (and the
+`predev` / `prebuild` hooks that call it) go away and the skill
+markdown is read straight from `../skills/`. Until then, every build
+pulls the current `main`.
 
 If a markdown file is removed upstream while still listed in
 `SKILL_CARD_SOURCES`, `pnpm build` fails with a "missing source" error.
@@ -97,7 +89,6 @@ append to `SKILL_CARD_SOURCES`:
   // first H1 (title) and frontmatter `description`.
   title: "Your Skill Title",
   description: "Verb-led summary of what this skill teaches.",
-  tags: ["optional", "labels"],
 }
 ```
 

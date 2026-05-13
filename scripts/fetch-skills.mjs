@@ -9,18 +9,14 @@
  * path like "skills/soroban/SKILL.md". We copy that exact path into
  * public/ unchanged; the upstream layout drives the site layout.
  *
+ * This is a temporary bridge: once the site is colocated under /site of
+ * the skills repo, this fetch step (and the whole script) goes away.
+ *
  * Flags:
  *   --cached   skip the network if every advertised source already exists.
  *              Used by `predev` so subsequent dev starts work offline.
  *   --lenient  warn instead of failing when an advertised source has no
  *              corresponding upstream file. Used by `predev` for DX.
- *
- * Env:
- *   SKILLS_REF   git ref or commit SHA to fetch (default "main"). For
- *                production, pin to a 40-char commit SHA so the build
- *                cannot pick up unreviewed upstream changes. Validated
- *                against a strict character set; never interpolated
- *                into a shell command.
  */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -47,16 +43,7 @@ const PUBLIC_SKILLS_DIR = join(PUBLIC_DIR, "skills");
 const SKILLS_DATA_FILE = join(ROOT, "src/data/skills.ts");
 
 const REPO = "stellar/stellar-dev-skill";
-const REF = process.env.SKILLS_REF ?? "main";
-
-// Reject anything that could be interpreted as shell syntax. GitHub refs
-// (branches, tags, SHAs) only need [A-Za-z0-9._/-].
-if (!/^[A-Za-z0-9._\/-]+$/.test(REF)) {
-  console.error(
-    `[fetch-skills] invalid SKILLS_REF=${JSON.stringify(REF)}; must match [A-Za-z0-9._/-]`,
-  );
-  process.exit(1);
-}
+const REF = "main";
 
 // `source:` only appears in SKILL_CARD_SOURCES — ECOSYSTEM_CARDS uses
 // `pathLabel:` / `copyValue:`, which the word boundary excludes.
@@ -97,8 +84,7 @@ try {
   const tarball = Buffer.from(await res.arrayBuffer());
 
   // Log the tarball hash on every run so it shows up in build logs.
-  // Useful for spotting unexpected upstream drift; not load-bearing
-  // because SKILLS_REF=<sha> is already content-addressed.
+  // Useful for spotting unexpected upstream drift between deploys.
   const actualSha = createHash("sha256").update(tarball).digest("hex");
   console.log(`[fetch-skills] tarball sha256=${actualSha}`);
 

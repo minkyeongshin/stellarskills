@@ -114,22 +114,28 @@
   display: inline-flex;
   align-items: center;
   gap: pxToRem(4px);
+  padding: pxToRem(6px) pxToRem(10px);
   font-family: "Inter", sans-serif;
   font-size: pxToRem(14px);
   font-weight: 500;
   color: var(--sds-clr-gray-09);
   text-decoration: none;
-  transition: color var(--sds-anim-transition-default);
+  border: 1px solid var(--sds-clr-gray-06);
+  border-radius: pxToRem(6px);
+  transition:
+    color var(--sds-anim-transition-default),
+    border-color var(--sds-anim-transition-default);
 
   svg {
-    width: pxToRem(16px);
-    height: pxToRem(16px);
+    width: pxToRem(14px);
+    height: pxToRem(14px);
     stroke: currentColor;
   }
 
   @media (hover: hover) {
     &:hover {
       color: var(--sds-clr-gray-11);
+      border-color: var(--sds-clr-gray-08);
     }
   }
 }
@@ -141,6 +147,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  // Single source of vertical rhythm between top-level sections (hero,
+  // Installing, Skills, Community). Individual sections shouldn't set
+  // their own margin-top / margin-bottom.
+  gap: pxToRem(24px);
   max-width: pxToRem(860px);
   width: 100%;
   margin: 0 auto;
@@ -160,7 +170,6 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: pxToRem(24px);
 }
 
 .SkillsLanding__title {
@@ -266,11 +275,6 @@
   gap: 12px;
   flex: 1;
 
-  &[data-fixed-height="true"] {
-    height: pxToRem(600px);
-    overflow-y: auto;
-  }
-
   .Card {
     --Card-color-border: transparent;
     --Card-padding: 0;
@@ -288,16 +292,17 @@
 }
 
 // CSS-driven filtering: every card is rendered server-side; non-matching
-// entries hide based on the panel's data-active-filter. Keeps all 15 card
-// titles/descriptions/links in the HTML response so non-JS clients (AI
-// agents, search bots) see everything.
+// entries hide based on the panel's data-active-filter. Keeps every
+// card's title/description/link in the HTML response so non-JS clients
+// (AI agents, search bots) see everything. Filter list mirrors
+// FILTERS in src/data/skills.ts minus "All".
 .SkillsLanding__filterPanel:not([data-active-filter="All"])
   .SkillsLanding__filterItem {
   display: none;
 }
 
 @each $filter
-  in (Agentic Payments, Soroban, Frontend, Assets, APIs, Security, Standards, ZK, Ecosystem)
+  in (Soroban, "Agentic Payments", Frontend, Assets, APIs, ZK, Ecosystem)
 {
   .SkillsLanding__filterPanel[data-active-filter="#{$filter}"]
     .SkillsLanding__filterItem[data-category="#{$filter}"] {
@@ -493,17 +498,10 @@ h2.SkillsCard__title {
 }
 
 // =============================================================================
-// Community + Installing sections
-// Installing is a bordered panel with transparent cards; Community drops the
-// panel border and lets the cards look like the main filtered skill cards
-// (filled .SkillsCard fill, transparent Card border).
+// Community + Installing sections (share the bordered-panel + card-grid look)
 // =============================================================================
-.SkillsLanding__ecosystem {
-  margin-top: pxToRem(24px);
-}
-
+.SkillsLanding__ecosystem,
 .SkillsLanding__installing {
-  margin-top: pxToRem(24px);
   padding: pxToRem(16px);
   background-color: transparent;
   border: 1px solid var(--sds-clr-gray-06);
@@ -528,34 +526,10 @@ p.SkillsLanding__sectionDescription {
   color: var(--sds-clr-gray-11);
 }
 
+// Card overrides shared by both panels (transparent SkillsCard inside a
+// bordered SDS Card).
 .SkillsLanding__ecosystemGrid,
-.SkillsLanding__installerGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  column-gap: 16px;
-  row-gap: 16px;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-// Community cards: mirror the main filtered skill cards (transparent Card
-// border, default filled .SkillsCard).
-.SkillsLanding__ecosystemGrid {
-  .Card {
-    --Card-color-border: transparent;
-    --Card-padding: 0;
-
-    .Card__container {
-      padding: 0;
-    }
-  }
-}
-
-// Installer cards: bordered Card + transparent .SkillsCard inside the
-// bordered Installing panel.
-.SkillsLanding__installerGrid {
+.SkillsLanding__installerPanel {
   .Card {
     --Card-color-border: var(--sds-clr-gray-06);
     --Card-color-background: transparent;
@@ -570,6 +544,39 @@ p.SkillsLanding__sectionDescription {
   .SkillsCard {
     background-color: transparent !important;
     margin: pxToRem(16px);
+  }
+}
+
+// Community grid: 2-col on desktop, single column on narrow screens.
+.SkillsLanding__ecosystemGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 16px;
+  row-gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Installer panel: independent tablist; only the active tab's card
+// shows. Stacks via flex column because exactly one card is visible.
+.SkillsLanding__installerPanel {
+  display: flex;
+  flex-direction: column;
+  margin-top: pxToRem(12px);
+}
+
+.SkillsLanding__installerPanel .SkillsLanding__filterItem {
+  display: none;
+}
+
+@each $tab
+  in ("Claude Code", "Cursor", "npx skills", "Clone repo")
+{
+  .SkillsLanding__installerPanel[data-active-filter="#{$tab}"]
+    .SkillsLanding__filterItem[data-category="#{$tab}"] {
+    display: block;
   }
 }
 

@@ -5,7 +5,7 @@ import {
   FILTERS,
   SKILL_CARD_SOURCES,
 } from "@/data/skills";
-import { readSkillMeta } from "@/lib/skill-meta";
+import { readSkillMeta } from "@/lib/skill-meta.mjs";
 
 import { CopyButton } from "./_components/CopyButton";
 import { GitHubIcon, LinkExternal01Icon } from "./_components/icons";
@@ -16,40 +16,16 @@ import { ThemeSwitchIsland } from "./_components/ThemeSwitchIsland";
 import "./styles.scss";
 
 /**
- * Origin used to render absolute URLs server-side. Resolved at build time
- * with the same precedence as scripts/generate-llms-txt.mjs:
- *
- *   SITE_ORIGIN                       manual override
- *   VERCEL_PROJECT_PRODUCTION_URL     canonical production domain on Vercel
- *   VERCEL_URL                        per-deployment URL on Vercel
- *   "http://localhost:3000"           local default
- *
- * Read non-prefixed env vars because page.tsx is a server component:
- * Vercel auto-exposes these on the server, but the `NEXT_PUBLIC_*`
- * mirrors are not all available (notably no auto-mirror of
- * `VERCEL_PROJECT_PRODUCTION_URL`).
+ * Origin used to render absolute URLs server-side. `SITE_ORIGIN` is a
+ * manual override; otherwise we fall back to the local dev origin.
+ * Mirrored in scripts/generate-llms-txt.mjs.
  */
-const SITE_ORIGIN =
-  process.env.SITE_ORIGIN ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000");
+const SITE_ORIGIN = process.env.SITE_ORIGIN || "http://localhost:3000";
 
 const hostFromOrigin = (origin: string) => origin.replace(/^https?:\/\//, "");
 
-/**
- * Upstream ref used by scripts/fetch-skills.mjs at build time. Mirroring
- * it here keeps the per-card "view source" links pointing at the exact
- * commit (or branch) we shipped, so what users see on GitHub matches
- * the markdown the site is actually serving. Set SKILLS_REF=<sha> in
- * Vercel to pin both the build and the source links to one commit.
- */
-const SKILLS_REF = process.env.SKILLS_REF || "main";
-
 const githubSourceUrl = (source: string) =>
-  `https://github.com/stellar/stellar-dev-skill/blob/${SKILLS_REF}/${source}`;
+  `https://github.com/stellar/stellar-dev-skill/blob/main/${source}`;
 
 export default function LandingPage() {
   const host = hostFromOrigin(SITE_ORIGIN);
@@ -105,20 +81,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="SkillsLanding__cards" aria-label="Skills list">
-          <SkillsFilter filters={FILTERS}>
-            {skillCards.map((c) => (
-              <div
-                key={c.copyValue}
-                data-category={c.category}
-                className="SkillsLanding__filterItem"
-              >
-                <SkillCard {...c} />
-              </div>
-            ))}
-          </SkillsFilter>
-        </section>
-
         <section className="SkillsLanding__installing" aria-label="Installing">
           <h2 className="SkillsLanding__sectionTitle">Installing Stellar Skills</h2>
           <p className="SkillsLanding__sectionDescription">
@@ -133,71 +95,110 @@ export default function LandingPage() {
             </a>
             , including Claude Code, OpenCode, OpenAI Codex, and Pi.
           </p>
-          <div className="SkillsLanding__installerGrid">
-            <Card>
-              <div className="SkillsCard">
-                <h3 className="SkillsCard__title">Claude Code</h3>
-                <p className="SkillsCard__description">
-                  Install using the plugin marketplace:
-                </p>
-                <div className="SkillsCard__commands">
-                  <CopyButton
-                    variant="path"
-                    value="/plugin marketplace add stellar/stellar-dev-skill"
-                  />
-                  <CopyButton
-                    variant="path"
-                    value="/plugin install stellar-dev@stellar-dev-skill"
-                  />
+          <SkillsFilter
+            filters={["Claude Code", "Cursor", "npx skills", "Clone repo"]}
+            defaultFilter="Claude Code"
+            panelClassName="SkillsLanding__installerPanel"
+            ariaLabel="Filter installation method"
+          >
+            <div
+              className="SkillsLanding__filterItem"
+              data-category="Claude Code"
+            >
+              <Card>
+                <div className="SkillsCard">
+                  <h3 className="SkillsCard__title">Claude Code</h3>
+                  <p className="SkillsCard__description">
+                    Install using the plugin marketplace:
+                  </p>
+                  <div className="SkillsCard__commands">
+                    <CopyButton
+                      variant="path"
+                      value="/plugin marketplace add stellar/stellar-dev-skill"
+                    />
+                    <CopyButton
+                      variant="path"
+                      value="/plugin install stellar-dev@stellar-dev-skill"
+                    />
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
 
-            <Card>
-              <div className="SkillsCard">
-                <h3 className="SkillsCard__title">Cursor</h3>
-                <p className="SkillsCard__description">
-                  Install from the Cursor Marketplace, or add manually via
-                  Settings → Rules → Add Rule → Remote Rule (GitHub) with this
-                  slug:
-                </p>
-                <div className="SkillsCard__commands">
-                  <CopyButton variant="path" value="stellar/stellar-dev-skill" />
+            <div className="SkillsLanding__filterItem" data-category="Cursor">
+              <Card>
+                <div className="SkillsCard">
+                  <h3 className="SkillsCard__title">Cursor</h3>
+                  <p className="SkillsCard__description">
+                    Install from the Cursor Marketplace, or add manually via
+                    Settings → Rules → Add Rule → Remote Rule (GitHub) with
+                    this slug:
+                  </p>
+                  <div className="SkillsCard__commands">
+                    <CopyButton
+                      variant="path"
+                      value="stellar/stellar-dev-skill"
+                    />
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
 
-            <Card>
-              <div className="SkillsCard">
-                <h3 className="SkillsCard__title">npx skills</h3>
-                <p className="SkillsCard__description">
-                  Install using the npx skills CLI:
-                </p>
-                <div className="SkillsCard__commands">
-                  <CopyButton
-                    variant="path"
-                    value="npx skills add https://github.com/stellar/stellar-dev-skill"
-                  />
+            <div
+              className="SkillsLanding__filterItem"
+              data-category="npx skills"
+            >
+              <Card>
+                <div className="SkillsCard">
+                  <h3 className="SkillsCard__title">npx skills</h3>
+                  <p className="SkillsCard__description">
+                    Install using the npx skills CLI:
+                  </p>
+                  <div className="SkillsCard__commands">
+                    <CopyButton
+                      variant="path"
+                      value="npx skills add https://github.com/stellar/stellar-dev-skill"
+                    />
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
 
-            <Card>
-              <div className="SkillsCard">
-                <h3 className="SkillsCard__title">Clone / Copy</h3>
-                <p className="SkillsCard__description">
-                  Clone the repo and copy the skills directory to your
-                  agent&apos;s skills location:
-                </p>
-                <div className="SkillsCard__commands">
-                  <CopyButton
-                    variant="path"
-                    value="git clone https://github.com/stellar/stellar-dev-skill"
-                  />
+            <div
+              className="SkillsLanding__filterItem"
+              data-category="Clone repo"
+            >
+              <Card>
+                <div className="SkillsCard">
+                  <h3 className="SkillsCard__title">Clone repo</h3>
+                  <p className="SkillsCard__description">
+                    Clone the repo and copy the skills directory to your
+                    agent&apos;s skills location:
+                  </p>
+                  <div className="SkillsCard__commands">
+                    <CopyButton
+                      variant="path"
+                      value="git clone https://github.com/stellar/stellar-dev-skill"
+                    />
+                  </div>
                 </div>
+              </Card>
+            </div>
+          </SkillsFilter>
+        </section>
+
+        <section className="SkillsLanding__cards" aria-label="Skills list">
+          <SkillsFilter filters={FILTERS}>
+            {skillCards.map((c) => (
+              <div
+                key={c.copyValue}
+                data-category={c.category}
+                className="SkillsLanding__filterItem"
+              >
+                <SkillCard {...c} />
               </div>
-            </Card>
-          </div>
+            ))}
+          </SkillsFilter>
         </section>
 
         <section className="SkillsLanding__ecosystem" aria-label="Community">

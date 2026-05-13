@@ -9,14 +9,18 @@
  * them here when you want to tune the landing-page voice.
  */
 
-export type FilterType =
+/**
+ * Categories used by `FILTERS` and by each card's `category`. Kept local
+ * because nothing outside this file needs it: `SkillsFilter` takes any
+ * `readonly string[]`, and consumers reference `FILTERS` directly.
+ */
+type FilterType =
   | "All"
   | "Agentic Payments"
   | "Soroban"
   | "Frontend"
   | "Assets"
   | "APIs"
-  | "Standards"
   | "ZK"
   | "Ecosystem";
 
@@ -31,7 +35,6 @@ export const FILTERS: readonly FilterType[] = [
   "Frontend",
   "Assets",
   "APIs",
-  "Standards",
   "ZK",
   "Ecosystem",
 ] as const;
@@ -49,12 +52,11 @@ export type SkillCardSource = {
   category: FilterType;
   /** Optional title override; defaults to the first H1 of the markdown. */
   title?: string;
-  /** Optional description override; defaults to the frontmatter
-   *  `description`. */
+  /** Optional short summary used on the landing card (keep to ~2 lines
+   *  so cards stay scannable). llms.txt always prefers the upstream
+   *  frontmatter `description` over this; this value is the fallback
+   *  there. */
   description?: string;
-  /** Free-form labels for future filter/search UX. Not wired into the
-   *  filter tabs today. */
-  tags?: readonly string[];
 };
 
 /**
@@ -81,49 +83,56 @@ export const SKILL_CARD_SOURCES: readonly SkillCardSource[] = [
     source: "skills/soroban/SKILL.md",
     category: "Soroban",
     title: "Soroban Smart Contracts",
-    tags: ["contracts", "testing", "security", "patterns", "pitfalls"],
+    description:
+      "Write, test, secure, and ship Rust smart contracts on Stellar. Covers patterns, pitfalls, and architecture.",
   },
   {
     source: "skills/dapp/SKILL.md",
     category: "Frontend",
     title: "Frontend & Wallets",
-    tags: ["freighter", "wallets-kit", "passkeys", "stellar-sdk"],
+    description:
+      "Build Stellar dApps with the JavaScript SDK, Freighter, Wallets Kit, and passkey smart accounts.",
   },
   {
     source: "skills/assets/SKILL.md",
     category: "Assets",
     title: "Stellar Assets & SAC",
-    tags: ["trustlines", "SAC", "issuance"],
+    description:
+      "Issue and manage classic Stellar assets and trustlines, with the SAC bridge for Soroban interop.",
   },
   {
     source: "skills/data/SKILL.md",
     category: "APIs",
     title: "RPC & Horizon APIs",
-    tags: ["rpc", "horizon", "indexing", "streaming"],
+    description:
+      "Query Stellar chain data with RPC (preferred) and Horizon (legacy). Covers streaming, indexing, and migration.",
   },
   {
     source: "skills/agentic-payments/SKILL.md",
     category: "Agentic Payments",
     title: "Agent Payments (x402 + MPP)",
-    tags: ["x402", "MPP", "USDC"],
+    description:
+      "Charge AI agents for API calls with x402 paywalls or MPP payment channels.",
   },
   {
     source: "skills/zk-proofs/SKILL.md",
     category: "ZK",
     title: "ZK Proofs",
-    tags: ["BLS12-381", "BN254", "Poseidon", "Groth16"],
+    description:
+      "Verify Groth16 zero-knowledge proofs on Stellar using BLS12-381, BN254, and Poseidon primitives.",
   },
   {
     source: "skills/standards/SKILL.md",
     category: "Ecosystem",
     title: "SEPs, CAPs & Ecosystem",
-    tags: ["ecosystem",],
+    description:
+      "Pick the right SEP or CAP for your feature, with ecosystem projects and curated reference links.",
   },
 ] as const;
 
 /**
  * Community-contributed skills hosted on third-party sites (e.g. GitHub).
- * Displayed in the "Ecosystem skills" section at the bottom of the page.
+ * Displayed in the "Community skills" section at the bottom of the page.
  */
 export const ECOSYSTEM_CARDS: readonly EcosystemCardSource[] = [
   {
