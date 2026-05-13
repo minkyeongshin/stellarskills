@@ -1,68 +1,51 @@
 "use client";
-import type { NextPage } from "next";
-import type { ErrorProps } from "next/error";
-import NextError from "next/error";
 
-import { Button, Card, Heading, Icon, Text } from "@stellar/design-system";
-import { Box } from "@/components/layout/Box";
-import { openUrl } from "@/helpers/openUrl";
+import { useEffect } from "react";
 
-const Error: NextPage<ErrorProps> = () => (
-  <>
-    <Card>
-      <Box gap="xl" align="start">
-        <Box gap="md">
-          <Heading as="h2" size="xs" weight="medium">
-            Unhandled Error
-          </Heading>
+import { ArrowLeftIcon } from "./_components/icons";
 
-          <Text size="sm" as="p">
-            Uh-oh, we didn’t handle this error. We would appreciate it if you
-            opened an issue on GitHub, providing as many details as possible to
-            help us fix this bug.
-          </Text>
-        </Box>
-
-        <Box gap="md" direction="row">
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<Icon.ArrowLeft />}
-            iconPosition="left"
-            onClick={() => {
-              location.reload();
-            }}
-          >
-            Return
-          </Button>
-
-          <Button
-            size="sm"
-            variant="primary"
-            iconPosition="left"
-            onClick={() =>
-              openUrl("https://github.com/stellar/laboratory/issues")
-            }
-          >
-            Open Issue
-          </Button>
-        </Box>
-      </Box>
-    </Card>
-  </>
-);
-
-Error.getInitialProps = async (contextData) => {
-  // Only send to Sentry in production and for truly unhandled errors
-  if (process.env.NODE_ENV === "production") {
-    // In case this is running in a serverless function, await this in order to give Sentry
-    // time to send the error before the lambda exits
-    const Sentry = await import("@sentry/nextjs");
-    await Sentry.captureUnderscoreErrorException(contextData);
-  }
-
-  // This will contain the status code of the response
-  return NextError.getInitialProps(contextData);
+type ErrorProps = {
+  error: Error & { digest?: string };
+  reset: () => void;
 };
 
-export default Error;
+export default function Error({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div className="ErrorContent">
+      <div className="ErrorContent__group">
+        <h2>Unhandled Error</h2>
+
+        <p>
+          Uh-oh, we didn’t handle this error. We would appreciate it if you
+          opened an issue on GitHub, providing as many details as possible to
+          help us fix this bug.
+          {error.digest ? ` (digest: ${error.digest})` : null}
+        </p>
+      </div>
+
+      <div className="ErrorContent__row">
+        <button
+          type="button"
+          className="ErrorContent__button"
+          onClick={() => reset()}
+        >
+          <ArrowLeftIcon />
+          Return
+        </button>
+
+        <a
+          className="ErrorContent__button ErrorContent__button--primary"
+          href="https://github.com/stellar/stellarskills/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open Issue
+        </a>
+      </div>
+    </div>
+  );
+}

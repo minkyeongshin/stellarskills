@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: pxToRem(12px);
   width: 100%;
   height: pxToRem(60px);
   padding: 0 pxToRem(24px);
@@ -43,23 +44,22 @@
   }
 }
 
-// =============================================================================
-// Agent view (raw SKILL.md)
-// =============================================================================
-.SkillsLanding__agentView {
-  min-height: 100vh;
-  background-color: var(--sds-clr-gray-01);
-  padding: pxToRem(24px);
-}
+.SkillsLanding__footerGithub {
+  display: inline-flex;
+  align-items: center;
+  color: var(--sds-clr-gray-09);
+  transition: color var(--sds-anim-transition-default);
 
-.SkillsLanding__agentContent {
-  font-family: "Roboto Mono", monospace;
-  font-size: pxToRem(14px);
-  line-height: 1.6;
-  color: var(--sds-clr-gray-12);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  margin: 0;
+  svg {
+    width: pxToRem(16px);
+    height: pxToRem(16px);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--sds-clr-gray-12);
+    }
+  }
 }
 
 // =============================================================================
@@ -114,22 +114,28 @@
   display: inline-flex;
   align-items: center;
   gap: pxToRem(4px);
+  padding: pxToRem(6px) pxToRem(10px);
   font-family: "Inter", sans-serif;
   font-size: pxToRem(14px);
   font-weight: 500;
   color: var(--sds-clr-gray-09);
   text-decoration: none;
-  transition: color var(--sds-anim-transition-default);
+  border: 1px solid var(--sds-clr-gray-06);
+  border-radius: pxToRem(6px);
+  transition:
+    color var(--sds-anim-transition-default),
+    border-color var(--sds-anim-transition-default);
 
   svg {
-    width: pxToRem(16px);
-    height: pxToRem(16px);
+    width: pxToRem(14px);
+    height: pxToRem(14px);
     stroke: currentColor;
   }
 
   @media (hover: hover) {
     &:hover {
       color: var(--sds-clr-gray-11);
+      border-color: var(--sds-clr-gray-08);
     }
   }
 }
@@ -141,6 +147,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  // Single source of vertical rhythm between top-level sections (hero,
+  // Installing, Skills, Community). Individual sections shouldn't set
+  // their own margin-top / margin-bottom.
+  gap: pxToRem(24px);
   max-width: pxToRem(860px);
   width: 100%;
   margin: 0 auto;
@@ -160,18 +170,6 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: pxToRem(24px);
-}
-
-.SkillsLanding__heroBackground {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100vw;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
 }
 
 .SkillsLanding__title {
@@ -189,114 +187,6 @@
   @media (max-width: 768px) {
     font-size: pxToRem(28px);
     line-height: pxToRem(36px);
-  }
-}
-
-.SkillsLanding__subtitle {
-  position: relative;
-  z-index: 1;
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(16px);
-  line-height: 1.5;
-  margin: 0 0 pxToRem(16px) 0;
-  color: var(--sds-clr-gray-09);
-}
-
-// =============================================================================
-// Mode toggle
-// =============================================================================
-.SkillsLanding__modeToggle {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: pxToRem(4px);
-  padding: pxToRem(4px);
-  margin: 0 auto pxToRem(24px);
-  background-color: var(--sds-clr-gray-03);
-  border: 1px solid var(--sds-clr-gray-06);
-  border-radius: pxToRem(999px);
-}
-
-.SkillsLanding__modeButton {
-  display: inline-flex;
-  align-items: center;
-  gap: pxToRem(6px);
-  padding: pxToRem(8px) pxToRem(16px);
-  border: none;
-  border-radius: pxToRem(999px);
-  background-color: transparent;
-  cursor: pointer;
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(14px);
-  font-weight: var(--sds-fw-medium);
-  color: var(--sds-clr-gray-09);
-  transition:
-    background-color var(--sds-anim-transition-default),
-    color var(--sds-anim-transition-default);
-
-  svg {
-    width: pxToRem(16px);
-    height: pxToRem(16px);
-    stroke: currentColor;
-  }
-
-  @media (hover: hover) {
-    &:hover:not([data-is-active="true"]) {
-      color: var(--sds-clr-gray-11);
-    }
-  }
-
-  &[data-is-active="true"] {
-    background-color: var(--sds-clr-gray-01);
-    color: var(--sds-clr-lilac-11);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-}
-
-// =============================================================================
-// Tabs
-// =============================================================================
-.SkillsLanding__tabs {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: pxToRem(24px);
-  flex-wrap: wrap;
-  margin: 0 auto pxToRem(16px);
-}
-
-.SkillsLanding__tab {
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(14px);
-  font-weight: var(--sds-fw-medium);
-  border: none;
-  background: transparent;
-  padding: pxToRem(6px) pxToRem(2px);
-  cursor: pointer;
-  color: var(--sds-clr-gray-09);
-  transition: color var(--sds-anim-transition-default);
-  position: relative;
-
-  @media (hover: hover) {
-    &:hover {
-      color: var(--sds-clr-gray-11);
-    }
-  }
-
-  &[data-is-active="true"] {
-    color: var(--sds-clr-lilac-11);
-
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: pxToRem(2px);
-      background-color: var(--sds-clr-lilac-09);
-      border-radius: pxToRem(999px);
-    }
   }
 }
 
@@ -385,11 +275,6 @@
   gap: 12px;
   flex: 1;
 
-  &[data-fixed-height="true"] {
-    height: pxToRem(600px);
-    overflow-y: auto;
-  }
-
   .Card {
     --Card-color-border: transparent;
     --Card-padding: 0;
@@ -397,6 +282,31 @@
     .Card__container {
       padding: 0;
     }
+  }
+}
+
+.SkillsLanding__filterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: pxToRem(12px);
+}
+
+// CSS-driven filtering: every card is rendered server-side; non-matching
+// entries hide based on the panel's data-active-filter. Keeps every
+// card's title/description/link in the HTML response so non-JS clients
+// (AI agents, search bots) see everything. Filter list mirrors
+// FILTERS in src/data/skills.ts minus "All".
+.SkillsLanding__filterPanel:not([data-active-filter="All"])
+  .SkillsLanding__filterItem {
+  display: none;
+}
+
+@each $filter
+  in (Soroban, "Agentic Payments", Frontend, Assets, APIs, ZK, Ecosystem)
+{
+  .SkillsLanding__filterPanel[data-active-filter="#{$filter}"]
+    .SkillsLanding__filterItem[data-category="#{$filter}"] {
+    display: block;
   }
 }
 
@@ -477,32 +387,6 @@
   }
 }
 
-.SkillsCard__expandedContent {
-  padding: 0 0 pxToRem(8px) 0;
-
-  p {
-    font-family: "Inter", sans-serif;
-    font-size: pxToRem(14px);
-    font-weight: 400;
-    line-height: pxToRem(20px);
-    margin: 0 0 pxToRem(8px) 0;
-    color: var(--sds-clr-gray-11);
-  }
-
-  ul {
-    margin: 0;
-    padding-left: pxToRem(20px);
-  }
-
-  li {
-    font-family: "Inter", sans-serif;
-    font-size: pxToRem(14px);
-    font-weight: 400;
-    line-height: pxToRem(24px);
-    color: var(--sds-clr-gray-11);
-  }
-}
-
 h2.SkillsCard__title {
   display: flex;
   align-items: center;
@@ -579,37 +463,45 @@ h2.SkillsCard__title {
   color: var(--sds-clr-gray-12);
 }
 
-.SkillsCard__actions {
+.SkillsCard__header {
   display: flex;
   align-items: center;
-  gap: pxToRem(16px);
+  gap: pxToRem(8px);
+  margin-bottom: pxToRem(4px);
+}
 
-  .Button {
-    padding-left: 0;
-    padding-right: 0;
-    border-color: transparent !important;
-    background-color: transparent !important;
+.SkillsCard__sourceLink {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--sds-clr-gray-09);
+  text-decoration: none;
+  transition: color var(--sds-anim-transition-default);
 
-    @media (hover: hover) {
-      &:hover {
-        background-color: transparent !important;
-        color: var(--sds-clr-lilac-11) !important;
-      }
+  svg {
+    width: pxToRem(14px);
+    height: pxToRem(14px);
+    stroke: currentColor;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--sds-clr-lilac-11);
     }
+  }
 
-    &:focus,
-    &:focus-visible {
-      outline: none !important;
-      box-shadow: none !important;
-    }
+  &:focus-visible {
+    outline: 2px solid var(--sds-clr-lilac-11);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 }
 
 // =============================================================================
-// Ecosystem section
+// Community + Installing sections (share the bordered-panel + card-grid look)
 // =============================================================================
-.SkillsLanding__ecosystem {
-  margin-top: pxToRem(24px);
+.SkillsLanding__ecosystem,
+.SkillsLanding__installing {
   padding: pxToRem(16px);
   background-color: transparent;
   border: 1px solid var(--sds-clr-gray-06);
@@ -634,12 +526,10 @@ p.SkillsLanding__sectionDescription {
   color: var(--sds-clr-gray-11);
 }
 
-.SkillsLanding__ecosystemGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  column-gap: 16px;
-  row-gap: 16px;
-
+// Card overrides shared by both panels (transparent SkillsCard inside a
+// bordered SDS Card).
+.SkillsLanding__ecosystemGrid,
+.SkillsLanding__installerPanel {
   .Card {
     --Card-color-border: var(--sds-clr-gray-06);
     --Card-color-background: transparent;
@@ -655,9 +545,38 @@ p.SkillsLanding__sectionDescription {
     background-color: transparent !important;
     margin: pxToRem(16px);
   }
+}
+
+// Community grid: 2-col on desktop, single column on narrow screens.
+.SkillsLanding__ecosystemGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 16px;
+  row-gap: 16px;
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
+  }
+}
+
+// Installer panel: independent tablist; only the active tab's card
+// shows. Stacks via flex column because exactly one card is visible.
+.SkillsLanding__installerPanel {
+  display: flex;
+  flex-direction: column;
+  margin-top: pxToRem(12px);
+}
+
+.SkillsLanding__installerPanel .SkillsLanding__filterItem {
+  display: none;
+}
+
+@each $tab
+  in ("Claude Code", "Cursor", "npx skills", "Clone repo")
+{
+  .SkillsLanding__installerPanel[data-active-filter="#{$tab}"]
+    .SkillsLanding__filterItem[data-category="#{$tab}"] {
+    display: block;
   }
 }
 
@@ -670,66 +589,37 @@ h3.SkillsCard__title {
   color: var(--sds-clr-gray-12);
 }
 
-// =============================================================================
-// Modal
-// =============================================================================
-.Modal__container {
+// Stacked copy pills inside an installer card (one pill per command).
+// The pills themselves use the existing .SkillsCard__pathButton styling;
+// this only handles the vertical layout and gives long pills (e.g. the
+// npx URL) somewhere to wrap when the column is narrow.
+.SkillsCard__commands {
   display: flex;
-  width: pxToRem(480px);
-  padding: pxToRem(16px);
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  gap: pxToRem(16px);
-  border-radius: pxToRem(8px);
-  border: 1px solid var(--sds-clr-gray-06, #E2E2E2);
-  background: var(--sds-clr-gray-01, #FCFCFC);
-  box-shadow: 0 pxToRem(10px) pxToRem(20px) pxToRem(-10px) rgba(0, 0, 0, 0.10);
+  align-items: flex-start;
+  gap: pxToRem(6px);
 
-  .ModalBody {
-    padding-right: 0;
+  .SkillsCard__pathWrapper,
+  .SkillsCard__pathButton {
+    max-width: 100%;
   }
 
-  .SkillsModal__heading {
-    display: flex;
-    flex-direction: column;
-    gap: pxToRem(8px);
-    width: 100%;
-  }
-
-  .SkillsModal__title {
-    font-family: "Inter", sans-serif;
-    font-size: pxToRem(16px);
-    font-weight: 500;
-    line-height: pxToRem(24px);
-    margin: 0;
-    color: var(--sds-clr-gray-12);
-  }
-
-  p.SkillsModal__description {
-    font-family: var(--sds-ff-body) !important;
-    font-size: pxToRem(14px) !important;
-    font-weight: 400 !important;
-    line-height: pxToRem(20px) !important;
-    margin: 0 !important;
-    color: var(--sds-clr-gray-11) !important;
-  }
-
-  .Modal__heading {
-    margin-bottom: pxToRem(16px) !important;
-  }
-
-  .SkillsModal__sectionTitle {
-    font-family: var(--sds-ff-body);
-    font-size: pxToRem(14px);
-    font-weight: 500;
-    line-height: pxToRem(20px);
-    margin: 0 0 pxToRem(8px) 0;
-    color: var(--sds-clr-gray-12);
+  .SkillsCard__pathText {
+    overflow-wrap: anywhere;
+    text-align: left;
   }
 }
 
-.Modal__background {
-  top: -1px;
+.SkillsLanding__inlineLink {
+  color: var(--sds-clr-lilac-11);
+  text-decoration: none;
+  transition: color var(--sds-anim-transition-default);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--sds-clr-lilac-09);
+    }
+  }
 }
+
 

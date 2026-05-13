@@ -1,42 +1,23 @@
-"use client";
+import Link from "next/link";
 
-import { useRouter } from "next/navigation";
-import { Button, Card, Heading, Icon, Text } from "@stellar/design-system";
-
-import { Routes } from "@/constants/routes";
-import { Box } from "@/components/layout/Box";
+import { ArrowLeftIcon } from "./_components/icons";
 
 export default function NotFound() {
-  const router = useRouter();
-
-  const handleBackClick = () => {
-    router.push(Routes.ROOT);
-  };
-
   return (
-    <Card>
-      <Box gap="xl" align="start">
-        <Box gap="md">
-          <Heading as="h2" size="xs" weight="medium">
-            Error 404 - Page not found
-          </Heading>
+    <div className="ErrorContent">
+      <div className="ErrorContent__group">
+        <h2>Error 404 - Page not found</h2>
 
-          <Text size="sm" as="p">
-            Oops! The page you’re looking for doesn’t exist. It might have been
-            removed, had its name changed, or is temporarily unavailable.
-          </Text>
-        </Box>
+        <p>
+          Oops! The page you’re looking for doesn’t exist. It might have been
+          removed, had its name changed, or is temporarily unavailable.
+        </p>
+      </div>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          icon={<Icon.ArrowLeft />}
-          iconPosition="left"
-          onClick={handleBackClick}
-        >
-          Back to home
-        </Button>
-      </Box>
-    </Card>
+      <Link href="/" className="ErrorContent__button">
+        <ArrowLeftIcon />
+        Back to home
+      </Link>
+    </div>
   );
 }
