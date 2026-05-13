@@ -1,8 +1,12 @@
 /**
  * Static content for the Stellar Skills landing page.
  *
- * Edit this file to add, remove, or reorder skills. No React knowledge
- * required; just keep the shape of each entry consistent.
+ * Each entry in SKILL_CARD_SOURCES points at a markdown file in
+ * stellar/stellar-dev-skill (via `source`). At build time we copy that
+ * file to public/<source>, so it's served at the same path on
+ * stellarskills.com. Title and description default to the upstream
+ * SKILL.md's frontmatter `description` and first `# heading`; override
+ * them here when you want to tune the landing-page voice.
  */
 
 export type FilterType =
@@ -12,7 +16,6 @@ export type FilterType =
   | "Frontend"
   | "Assets"
   | "APIs"
-  | "Security"
   | "Standards"
   | "ZK"
   | "Ecosystem";
@@ -28,23 +31,30 @@ export const FILTERS: readonly FilterType[] = [
   "Frontend",
   "Assets",
   "APIs",
-  "Security",
   "Standards",
   "ZK",
   "Ecosystem",
 ] as const;
 
 /**
- * A skill entry that lives at a path under the current origin
- * (e.g. /skills/soroban/contracts-soroban.md). The full URL is constructed
- * at render time so the same data works in dev, preview, and production.
+ * A skill entry mirrored from stellar/stellar-dev-skill. `source` is the
+ * upstream path; the site path and fetch destination are both derived
+ * from it. `title` and `description` are optional — the page falls back
+ * to upstream metadata when they're omitted.
  */
 export type SkillCardSource = {
-  title: string;
-  description: string;
-  /** Path under the site origin, e.g. "/skills/soroban/foo.md". */
-  path: string;
+  /** Upstream path, e.g. "skills/soroban/SKILL.md". Forms both the
+   *  fetch source and the site URL ("/" + source). */
+  source: string;
   category: FilterType;
+  /** Optional title override; defaults to the first H1 of the markdown. */
+  title?: string;
+  /** Optional description override; defaults to the frontmatter
+   *  `description`. */
+  description?: string;
+  /** Free-form labels for future filter/search UX. Not wired into the
+   *  filter tabs today. */
+  tags?: readonly string[];
 };
 
 /**
@@ -63,114 +73,51 @@ export type EcosystemCardSource = {
 };
 
 /**
- * Skills authored and maintained by the Stellar Skills project. Hosted
- * under this site's origin.
+ * Skills mirrored from stellar/stellar-dev-skill. One entry per upstream
+ * SKILL.md.
  */
 export const SKILL_CARD_SOURCES: readonly SkillCardSource[] = [
   {
-    title: "Stellar Development Skill",
-    description:
-      "Top-level Stellar reference that ties every other skill together. Covers Soroban contracts, JavaScript/Python/Go SDKs, RPC, wallets, assets, security, ZK, and agent payments via x402 and MPP.",
-    path: "/skills/SKILL.md",
-    category: "All",
-  },
-  {
-    title: "Curated Resources",
-    description:
-      "Source-of-truth links for everything Stellar. Official docs, RPC and Horizon API references, client and contract SDKs, the Stellar CLI, oracle providers, security guides, and bug bounty programs.",
-    path: "/skills/resources.md",
-    category: "Ecosystem",
-  },
-  {
-    title: "Build Smart Contracts",
-    description:
-      "Write Soroban smart contracts in Rust. Walks through project setup, storage types, authorization, constructors, cross-contract calls, events, error handling, and deployment with the Stellar CLI.",
-    path: "/skills/contracts-soroban.md",
+    source: "skills/soroban/SKILL.md",
     category: "Soroban",
+    title: "Soroban Smart Contracts",
+    tags: ["contracts", "testing", "security", "patterns", "pitfalls"],
   },
   {
-    title: "Advanced Contract Patterns",
-    description:
-      "Architecture playbook for production Soroban contracts. Covers upgrades and migrations, factory and deployer systems, governance timelocks, DeFi vaults and AMMs, oracle integrations, and compliance-aware tokens.",
-    path: "/skills/advanced-patterns.md",
-    category: "Soroban",
-  },
-  {
-    title: "Avoid Common Pitfalls",
-    description:
-      "Diagnose and fix the Stellar errors developers actually hit in practice. Contract size limits, TTL exhaustion, authorization failures, network passphrase mismatches, trustline issues, sequence numbers, and simulation gotchas.",
-    path: "/skills/common-pitfalls.md",
-    category: "Soroban",
-  },
-  {
-    title: "Test Contract Logic",
-    description:
-      "Test Soroban contracts at every layer. Unit tests with soroban-sdk testutils, local networks via Stellar Quickstart Docker, testnet runs, plus fuzz, property-based, snapshot, and fork testing patterns.",
-    path: "/skills/testing.md",
-    category: "Soroban",
-  },
-  {
-    title: "Frontend Integration",
-    description:
-      "Build Stellar dApps in Next.js or React. SDK setup, Freighter and Stellar Wallets Kit integration, transaction building and submission, passkey smart accounts, and a production transaction UX checklist.",
-    path: "/skills/frontend-stellar-sdk.md",
+    source: "skills/dapp/SKILL.md",
     category: "Frontend",
+    title: "Frontend & Wallets",
+    tags: ["freighter", "wallets-kit", "passkeys", "stellar-sdk"],
   },
   {
-    title: "Stellar Assets",
-    description:
-      "Issue and manage Stellar Classic assets. Covers asset types, trustlines, auth flags, liquidity pool shares, and bridging to Soroban contracts through the Stellar Asset Contract (SAC).",
-    path: "/skills/stellar-assets.md",
+    source: "skills/assets/SKILL.md",
     category: "Assets",
+    title: "Stellar Assets & SAC",
+    tags: ["trustlines", "SAC", "issuance"],
   },
   {
-    title: "RPC & Horizon APIs",
-    description:
-      "Pick the right Stellar data API and use it correctly. Stellar RPC for new projects (accounts, transactions, simulation, events, streaming) and Horizon for historical or legacy data, with a step-by-step Horizon-to-RPC migration path.",
-    path: "/skills/api-rpc-horizon.md",
+    source: "skills/data/SKILL.md",
     category: "APIs",
+    title: "RPC & Horizon APIs",
+    tags: ["rpc", "horizon", "indexing", "streaming"],
   },
   {
-    title: "Security Checklist",
-    description:
-      "Harden Soroban and Classic Stellar code against real attack patterns. Missing authorization, reinitialization, integer overflow, TTL exhaustion, trustline and clawback risks, plus tooling such as Scout and Sunbeam and recommended audit programs.",
-    path: "/skills/security.md",
-    category: "Security",
+    source: "skills/agentic-payments/SKILL.md",
+    category: "Agentic Payments",
+    title: "Agent Payments (x402 + MPP)",
+    tags: ["x402", "MPP", "USDC"],
   },
   {
-    title: "SEPs & CAPs Reference",
-    description:
-      "Map any feature to the right Stellar standard. Token interfaces, web auth, anchor and on/off-ramp flows, passkeys, contract upgradeability, NFTs, and regulated tokens, all linked to current SEPs and CAPs.",
-    path: "/skills/standards-reference.md",
-    category: "Standards",
-  },
-  {
-    title: "ZK Proofs",
-    description:
-      "Plan zero-knowledge proof verification on Stellar with awareness of evolving protocol support. CAP-0059, CAP-0074, and CAP-0075 readiness, Groth16 and PLONK integration patterns, and capability-gated contract design.",
-    path: "/skills/zk-proofs.md",
+    source: "skills/zk-proofs/SKILL.md",
     category: "ZK",
+    title: "ZK Proofs",
+    tags: ["BLS12-381", "BN254", "Poseidon", "Groth16"],
   },
   {
-    title: "MPP Agent Payments",
-    description:
-      "Settle AI agent payments directly on Stellar with no facilitator dependency. Charge mode pays per request via Soroban SAC transfers; channel mode batches hundreds of off-chain payments into a single deposit and close.",
-    path: "/skills/mpp.md",
-    category: "Agentic Payments",
-  },
-  {
-    title: "x402 Payments",
-    description:
-      "Add HTTP 402 paywalls to any API on Stellar with the fastest possible setup. The OZ Channels facilitator sponsors network fees so clients (including AI agents) pay with zero XLM, and the implementation stays interoperable with the broader x402 ecosystem.",
-    path: "/skills/x402.md",
-    category: "Agentic Payments",
-  },
-  {
-    title: "Ecosystem Projects",
-    description:
-      "Browse the Stellar ecosystem to find the right integration for your app. DeFi protocols like Blend and Soroswap, data services like Reflector and Mercury, OpenZeppelin contracts, wallets, oracles, and audit firms, with use cases and links.",
-    path: "/skills/ecosystem.md",
+    source: "skills/standards/SKILL.md",
     category: "Ecosystem",
+    title: "SEPs, CAPs & Ecosystem",
+    tags: ["ecosystem",],
   },
 ] as const;
 

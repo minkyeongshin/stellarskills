@@ -35,10 +35,17 @@ pnpm generate:llms-txt  # regenerate public/llms.txt
 
 Skill markdown lives in
 [`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill),
-not here. `scripts/fetch-skills.mjs` downloads it into `public/skills/` at
-build time, mapping each entry in `src/data/skills.ts` by basename.
+not here. Each entry in `src/data/skills.ts` has a `source` field
+pointing at an upstream path (e.g. `skills/soroban/SKILL.md`).
+`scripts/fetch-skills.mjs` mirrors that path verbatim into `public/` at
+build time, so the upstream layout drives the site URL.
 `scripts/generate-llms-txt.mjs` then writes `public/llms.txt` from the
 same data. Both `public/skills/` and `public/llms.txt` are gitignored.
+
+Card titles and descriptions default to the upstream SKILL.md's first
+H1 and frontmatter `description`. Override them per card in skills.ts
+when you want a shorter title or a different summary for the landing
+page.
 
 **Upstream changes are not auto-deployed.** A change in
 `stellar-dev-skill` reaches production only when a build runs here:
@@ -57,7 +64,7 @@ SHA so the site cannot pick up unreviewed upstream changes.
 
 1. `scripts/fetch-skills.mjs` downloads the markdown at that ref.
 2. `src/app/page.tsx` builds each card's "view source" link as
-   `github.com/stellar/stellar-dev-skill/blob/<SKILLS_REF>/skill/<file>.md`,
+   `github.com/stellar/stellar-dev-skill/blob/<SKILLS_REF>/<source>`,
    so what users see on GitHub matches what the site is serving.
 
 **To track a new upstream version (Vercel):**
@@ -87,15 +94,19 @@ for local dev but not recommended for production deploys.
 
 All cards are defined in [`src/data/skills.ts`](src/data/skills.ts).
 
-**Main list (`SKILL_CARD_SOURCES`):** add `skill/<your-skill>.md` to
-`stellar/stellar-dev-skill` first, then append:
+**Main list (`SKILL_CARD_SOURCES`):** add
+`skills/<your-skill>/SKILL.md` to `stellar/stellar-dev-skill` first,
+then append:
 
 ```ts
 {
+  source: "skills/<your-skill>/SKILL.md",
+  category: "Soroban", // any FilterType value
+  // Optional overrides — default to the upstream SKILL.md's first H1
+  // (title) and frontmatter `description`.
   title: "Your Skill Title",
   description: "What this skill teaches.",
-  path: "/skills/<your-skill>.md",
-  category: "Soroban", // any FilterType value
+  tags: ["optional", "labels"],
 }
 ```
 

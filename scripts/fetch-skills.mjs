@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 /**
  * Fetches skill markdown from stellar/stellar-dev-skill at build time and
- * writes each file under public/ so the URLs advertised in
- * src/data/skills.ts (e.g. /skill/SKILL.md) resolve as static assets.
+ * mirrors each file under public/, so the URLs advertised in
+ * src/data/skills.ts (e.g. /skills/soroban/SKILL.md) resolve as static
+ * assets.
  *
- * The source repo layout is flat (skill/<file>.md); the site URLs nest by
- * category (/skills/<category>/<file>.md). We map by basename — each
- * source filename appears exactly once in skills.ts.
+ * Each card in skills.ts carries a `source` field — an upstream-relative
+ * path like "skills/soroban/SKILL.md". We copy that exact path into
+ * public/ unchanged; the upstream layout drives the site layout.
  *
  * Flags:
- *   --cached   skip the network if every advertised path already exists.
+ *   --cached   skip the network if every advertised source already exists.
  *              Used by `predev` so subsequent dev starts work offline.
- *   --lenient  warn instead of failing when an advertised path has no
- *              corresponding source file. Used by `predev` for DX.
+ *   --lenient  warn instead of failing when an advertised source has no
+ *              corresponding upstream file. Used by `predev` for DX.
  *
  * Env:
  *   SKILLS_REF   git ref or commit SHA to fetch (default "main"). For
@@ -42,11 +43,11 @@ const strict = !args.has("--lenient");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(__dirname);
 const PUBLIC_DIR = join(ROOT, "public");
+const PUBLIC_SKILLS_DIR = join(PUBLIC_DIR, "skills");
 const SKILLS_DATA_FILE = join(ROOT, "src/data/skills.ts");
 
 const REPO = "stellar/stellar-dev-skill";
 const REF = process.env.SKILLS_REF ?? "main";
-const SOURCE_SUBDIR = "skill";
 
 // Reject anything that could be interpreted as shell syntax. GitHub refs
 // (branches, tags, SHAs) only need [A-Za-z0-9._/-].
@@ -57,23 +58,27 @@ if (!/^[A-Za-z0-9._\/-]+$/.test(REF)) {
   process.exit(1);
 }
 
-// `path:` only appears in SKILL_CARD_SOURCES — ECOSYSTEM_CARDS uses
+// `source:` only appears in SKILL_CARD_SOURCES — ECOSYSTEM_CARDS uses
 // `pathLabel:` / `copyValue:`, which the word boundary excludes.
 const skillsSource = readFileSync(SKILLS_DATA_FILE, "utf8");
-const sitePaths = [...skillsSource.matchAll(/\bpath:\s*"([^"]+)"/g)].map(
+const sources = [...skillsSource.matchAll(/\bsource:\s*"([^"]+)"/g)].map(
   (m) => m[1],
 );
-if (sitePaths.length === 0) {
-  console.error(`[fetch-skills] no paths found in ${SKILLS_DATA_FILE}`);
+if (sources.length === 0) {
+  console.error(`[fetch-skills] no sources found in ${SKILLS_DATA_FILE}`);
   process.exit(1);
 }
 
-if (cached && sitePaths.every((p) => existsSync(join(PUBLIC_DIR, p)))) {
+if (cached && sources.every((s) => existsSync(join(PUBLIC_DIR, s)))) {
   console.log(
-    `[fetch-skills] cached (${sitePaths.length} files) — run \`pnpm fetch:skills\` to refresh`,
+    `[fetch-skills] cached (${sources.length} files) — run \`pnpm fetch:skills\` to refresh`,
   );
   process.exit(0);
 }
+
+// Clean stale files before writing fresh ones so removed skills don't
+// linger in public/.
+rmSync(PUBLIC_SKILLS_DIR, { recursive: true, force: true });
 
 const tmp = mkdtempSync(join(tmpdir(), "stellar-dev-skill-"));
 try {
@@ -112,20 +117,12 @@ try {
     proc.stdin.end(tarball);
   });
 
-  const sourceDir = join(tmp, SOURCE_SUBDIR);
-  if (!existsSync(sourceDir)) {
-    throw new Error(
-      `[fetch-skills] expected '${SOURCE_SUBDIR}/' directory at the root of ${REPO}@${REF}`,
-    );
-  }
-
   const missing = [];
-  for (const sitePath of sitePaths) {
-    const filename = sitePath.split("/").pop();
-    const src = join(sourceDir, filename);
-    const dest = join(PUBLIC_DIR, sitePath);
+  for (const source of sources) {
+    const src = join(tmp, source);
+    const dest = join(PUBLIC_DIR, source);
     if (!existsSync(src)) {
-      missing.push({ sitePath, expected: `${SOURCE_SUBDIR}/${filename}` });
+      missing.push(source);
       continue;
     }
     mkdirSync(dirname(dest), { recursive: true });
@@ -135,22 +132,21 @@ try {
   // Apache-2.0 attribution alongside the content.
   const upstreamLicense = join(tmp, "LICENSE");
   if (existsSync(upstreamLicense)) {
-    cpSync(upstreamLicense, join(PUBLIC_DIR, "skills", "LICENSE"), {
+    mkdirSync(PUBLIC_SKILLS_DIR, { recursive: true });
+    cpSync(upstreamLicense, join(PUBLIC_SKILLS_DIR, "LICENSE"), {
       dereference: false,
     });
   }
 
   if (missing.length > 0) {
-    const lines = missing
-      .map((m) => `  ${m.sitePath} (expected ${m.expected})`)
-      .join("\n");
-    const msg = `[fetch-skills] ${missing.length} advertised path(s) missing in ${REPO}@${REF}:\n${lines}`;
+    const lines = missing.map((s) => `  ${s}`).join("\n");
+    const msg = `[fetch-skills] ${missing.length} advertised source(s) missing in ${REPO}@${REF}:\n${lines}`;
     if (strict) throw new Error(msg);
     console.warn(msg);
   }
 
-  const ok = sitePaths.length - missing.length;
-  console.log(`[fetch-skills] wrote ${ok}/${sitePaths.length} files`);
+  const ok = sources.length - missing.length;
+  console.log(`[fetch-skills] wrote ${ok}/${sources.length} files`);
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

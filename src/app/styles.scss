@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: pxToRem(12px);
   width: 100%;
   height: pxToRem(60px);
   padding: 0 pxToRem(24px);
@@ -39,6 +40,24 @@
   @media (hover: hover) {
     &:hover {
       color: var(--sds-clr-lilac-09);
+    }
+  }
+}
+
+.SkillsLanding__footerGithub {
+  display: inline-flex;
+  align-items: center;
+  color: var(--sds-clr-gray-09);
+  transition: color var(--sds-anim-transition-default);
+
+  svg {
+    width: pxToRem(16px);
+    height: pxToRem(16px);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--sds-clr-gray-12);
     }
   }
 }
@@ -474,9 +493,16 @@ h2.SkillsCard__title {
 }
 
 // =============================================================================
-// Ecosystem section
+// Community + Installing sections
+// Installing is a bordered panel with transparent cards; Community drops the
+// panel border and lets the cards look like the main filtered skill cards
+// (filled .SkillsCard fill, transparent Card border).
 // =============================================================================
 .SkillsLanding__ecosystem {
+  margin-top: pxToRem(24px);
+}
+
+.SkillsLanding__installing {
   margin-top: pxToRem(24px);
   padding: pxToRem(16px);
   background-color: transparent;
@@ -502,12 +528,34 @@ p.SkillsLanding__sectionDescription {
   color: var(--sds-clr-gray-11);
 }
 
-.SkillsLanding__ecosystemGrid {
+.SkillsLanding__ecosystemGrid,
+.SkillsLanding__installerGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   column-gap: 16px;
   row-gap: 16px;
 
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Community cards: mirror the main filtered skill cards (transparent Card
+// border, default filled .SkillsCard).
+.SkillsLanding__ecosystemGrid {
+  .Card {
+    --Card-color-border: transparent;
+    --Card-padding: 0;
+
+    .Card__container {
+      padding: 0;
+    }
+  }
+}
+
+// Installer cards: bordered Card + transparent .SkillsCard inside the
+// bordered Installing panel.
+.SkillsLanding__installerGrid {
   .Card {
     --Card-color-border: var(--sds-clr-gray-06);
     --Card-color-background: transparent;
@@ -523,10 +571,6 @@ p.SkillsLanding__sectionDescription {
     background-color: transparent !important;
     margin: pxToRem(16px);
   }
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
 }
 
 h3.SkillsCard__title {
@@ -536,6 +580,39 @@ h3.SkillsCard__title {
   line-height: pxToRem(20px);
   margin: 0;
   color: var(--sds-clr-gray-12);
+}
+
+// Stacked copy pills inside an installer card (one pill per command).
+// The pills themselves use the existing .SkillsCard__pathButton styling;
+// this only handles the vertical layout and gives long pills (e.g. the
+// npx URL) somewhere to wrap when the column is narrow.
+.SkillsCard__commands {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: pxToRem(6px);
+
+  .SkillsCard__pathWrapper,
+  .SkillsCard__pathButton {
+    max-width: 100%;
+  }
+
+  .SkillsCard__pathText {
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+}
+
+.SkillsLanding__inlineLink {
+  color: var(--sds-clr-lilac-11);
+  text-decoration: none;
+  transition: color var(--sds-anim-transition-default);
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--sds-clr-lilac-09);
+    }
+  }
 }
 
 

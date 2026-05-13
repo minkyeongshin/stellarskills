@@ -22,6 +22,9 @@ Don't move card data into a client component.
 - `src/data/skills.ts`: single source of truth.
   `SKILL_CARD_SOURCES` (main list), `ECOSYSTEM_CARDS` (community
   section), `FilterType` / `FILTERS` (category tabs).
+- `src/lib/skill-meta.ts`: parses each upstream SKILL.md's frontmatter
+  `description` and first `# heading` so cards default to upstream
+  metadata when `title` / `description` aren't overridden in skills.ts.
 - `src/app/page.tsx`: server-rendered landing page.
 - `src/app/_components/`: `SkillCard` (server), `icons` (server, inline
   SVGs), `CopyButton` / `SkillsFilter` / `ThemeSwitchIsland` (client
@@ -31,7 +34,8 @@ Don't move card data into a client component.
   `[A-Za-z0-9._/-]+` and uses `spawn("tar")` (no shell) to avoid
   injection via env vars.
 - `scripts/generate-llms-txt.mjs`: writes `public/llms.txt` from
-  `src/data/skills.ts`.
+  `src/data/skills.ts`. Mirrors the frontmatter-fallback logic in
+  `src/lib/skill-meta.ts` so the index and the page agree.
 - `next.config.js`: scoped `frame-ancestors`, plus
   `X-Content-Type-Options: nosniff` and `Referrer-Policy`. No
   middleware.
@@ -54,8 +58,10 @@ pnpm generate:llms-txt  # regenerate public/llms.txt
 
 Skill markdown lives in
 [`stellar/stellar-dev-skill`](https://github.com/stellar/stellar-dev-skill).
-`fetch-skills.mjs` maps each `SKILL_CARD_SOURCES` entry by the basename
-of its `path` to a file under `skill/` upstream.
+Each `SKILL_CARD_SOURCES` entry carries a `source` field — an
+upstream-relative path like `skills/soroban/SKILL.md` — and
+`fetch-skills.mjs` mirrors that path verbatim into `public/`, so the
+upstream layout drives the site URL.
 
 `SKILLS_REF` (default `main`) selects the upstream ref and is read in
 two places at build time: `fetch-skills.mjs` (which markdown to
@@ -72,7 +78,7 @@ reach production only when someone pushes a commit to `main` or hits
 run `pnpm fetch:skills`.
 
 If a markdown file is removed upstream while still listed in
-`SKILL_CARD_SOURCES`, `pnpm build` fails with a "missing path" error.
+`SKILL_CARD_SOURCES`, `pnpm build` fails with a "missing source" error.
 Restore it upstream or remove the entry here.
 
 `ECOSYSTEM_CARDS` link to external URLs and do not touch the fetch
@@ -80,15 +86,18 @@ pipeline.
 
 ## Adding a skill
 
-**Main list:** add `skill/<your-skill>.md` upstream first, then append to
-`SKILL_CARD_SOURCES`:
+**Main list:** add `skills/<your-skill>/SKILL.md` upstream first, then
+append to `SKILL_CARD_SOURCES`:
 
 ```ts
 {
+  source: "skills/<your-skill>/SKILL.md",
+  category: "Soroban", // any FilterType value
+  // Optional overrides — both default to the upstream SKILL.md's
+  // first H1 (title) and frontmatter `description`.
   title: "Your Skill Title",
   description: "Verb-led summary of what this skill teaches.",
-  path: "/skills/<your-skill>.md",
-  category: "Soroban", // any FilterType value
+  tags: ["optional", "labels"],
 }
 ```
 
