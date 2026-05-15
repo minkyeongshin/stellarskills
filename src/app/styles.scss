@@ -172,21 +172,21 @@
   text-align: center;
 }
 
-.SkillsLanding__title {
+.SkillsLanding h1.SkillsLanding__title {
   position: relative;
   z-index: 1;
-  font-family: "Inter", sans-serif;
-  font-size: pxToRem(36px);
-  font-weight: 600;
+  font-family: "Inter", sans-serif !important;
+  font-size: 32px !important;
+  font-weight: 600 !important;
   letter-spacing: -0.5px;
-  line-height: pxToRem(44px);
+  line-height: 40px !important;
   color: var(--sds-clr-gray-12);
-  margin: 0 0 pxToRem(24px) 0;
+  margin: 0;
   max-width: pxToRem(820px);
 
   @media (max-width: 768px) {
-    font-size: pxToRem(28px);
-    line-height: pxToRem(36px);
+    font-size: 26px !important;
+    line-height: 34px !important;
   }
 }
 
@@ -498,14 +498,18 @@ h2.SkillsCard__title {
 }
 
 // =============================================================================
-// Community + Installing sections (share the bordered-panel + card-grid look)
+// Community section (bordered panel)
 // =============================================================================
-.SkillsLanding__ecosystem,
-.SkillsLanding__installing {
+.SkillsLanding__ecosystem {
   padding: pxToRem(16px);
   background-color: transparent;
   border: 1px solid var(--sds-clr-gray-06);
   border-radius: pxToRem(12px);
+}
+
+// Installing section (single card, no wrapper border)
+.SkillsLanding__installing {
+  // No wrapper styles needed; InstallCard handles its own card styling
 }
 
 h2.SkillsLanding__sectionTitle {
@@ -619,6 +623,115 @@ h3.SkillsCard__title {
     &:hover {
       color: var(--sds-clr-lilac-09);
     }
+  }
+}
+
+// =============================================================================
+// Install Tabs
+// =============================================================================
+.InstallTabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.InstallTabs__tabBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: pxToRem(32px);
+  width: 100%;
+}
+
+.InstallTabs__tab {
+  padding: 0 pxToRem(4px) pxToRem(8px);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: pxToRem(14px);
+  font-weight: 500;
+  line-height: pxToRem(20px);
+  color: var(--sds-clr-gray-09);
+  transition:
+    color var(--sds-anim-transition-default),
+    border-color var(--sds-anim-transition-default);
+
+  &[data-active="true"] {
+    color: var(--sds-clr-lilac-11);
+    border-bottom-color: var(--sds-clr-lilac-11);
+  }
+
+  @media (hover: hover) {
+    &:hover:not([data-active="true"]) {
+      color: var(--sds-clr-gray-11);
+    }
+  }
+}
+
+.InstallTabs__content {
+  margin-top: pxToRem(24px);
+  padding: pxToRem(16px);
+
+  // "For this chat only" - transparent, no border
+  &[data-tab="oneTime"] {
+    background-color: transparent;
+  }
+
+  // "Install for every chat" - with background, no border
+  &[data-tab="everyChat"] {
+    background-color: var(--sds-clr-gray-01);
+    border-radius: pxToRem(8px);
+  }
+}
+
+.InstallTabs__oneTime {
+  display: flex;
+  justify-content: center;
+}
+
+.InstallTabs__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.InstallTabs__row {
+  display: flex;
+  align-items: flex-start;
+  gap: pxToRem(12px);
+  padding: pxToRem(10px) 0;
+  border-top: 0.5px solid var(--sds-clr-gray-06);
+
+  &[data-first="true"] {
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+.InstallTabs__toolName {
+  flex-shrink: 0;
+  width: pxToRem(100px);
+  font-family: "Inter", sans-serif;
+  font-size: pxToRem(14px);
+  font-weight: 400;
+  line-height: pxToRem(24px);
+  color: var(--sds-clr-gray-09);
+}
+
+.InstallTabs__commands {
+  display: flex;
+  flex-direction: column;
+  gap: pxToRem(6px);
+  flex: 1;
+  min-width: 0;
+
+  .SkillsCard__pathWrapper {
+    max-width: 100%;
+  }
+
+  .SkillsCard__pathText {
+    overflow-wrap: anywhere;
   }
 }
 

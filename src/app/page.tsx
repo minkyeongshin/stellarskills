@@ -1,4 +1,4 @@
-import { Badge, Card, Logo } from "@stellar/design-system";
+import { Badge, Logo } from "@stellar/design-system";
 
 import {
   ECOSYSTEM_CARDS,
@@ -7,8 +7,8 @@ import {
 } from "@/data/skills";
 import { readSkillMeta } from "@/lib/skill-meta.mjs";
 
-import { CopyButton } from "./_components/CopyButton";
 import { GitHubIcon, LinkExternal01Icon } from "./_components/icons";
+import { InstallTabs } from "./_components/InstallTabs";
 import { SkillCard } from "./_components/SkillCard";
 import { SkillsFilter } from "./_components/SkillsFilter";
 import { ThemeSwitchIsland } from "./_components/ThemeSwitchIsland";
@@ -75,116 +75,10 @@ export default function LandingPage() {
             Give your AI the right Stellar context before it writes code. Works
             with any AI agent.
           </h1>
-
-          <div className="SkillsLanding__pill">
-            <CopyButton variant="pill" value={heroValue} />
-          </div>
         </section>
 
         <section className="SkillsLanding__installing" aria-label="Installing">
-          <h2 className="SkillsLanding__sectionTitle">Installing Stellar Skills</h2>
-          <p className="SkillsLanding__sectionDescription">
-            Stellar Skills work with any agent that supports the{" "}
-            <a
-              href="https://agentskills.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="SkillsLanding__inlineLink"
-            >
-              Agent Skills standard
-            </a>
-            , including Claude Code, OpenCode, OpenAI Codex, and Pi.
-          </p>
-          <SkillsFilter
-            filters={["Claude Code", "Cursor", "npx skills", "Clone repo"]}
-            defaultFilter="Claude Code"
-            panelClassName="SkillsLanding__installerPanel"
-            ariaLabel="Filter installation method"
-          >
-            <div
-              className="SkillsLanding__filterItem"
-              data-category="Claude Code"
-            >
-              <Card>
-                <div className="SkillsCard">
-                  <h3 className="SkillsCard__title">Claude Code</h3>
-                  <p className="SkillsCard__description">
-                    Install using the plugin marketplace:
-                  </p>
-                  <div className="SkillsCard__commands">
-                    <CopyButton
-                      variant="path"
-                      value="/plugin marketplace add stellar/stellar-dev-skill"
-                    />
-                    <CopyButton
-                      variant="path"
-                      value="/plugin install stellar-dev@stellar-dev-skill"
-                    />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="SkillsLanding__filterItem" data-category="Cursor">
-              <Card>
-                <div className="SkillsCard">
-                  <h3 className="SkillsCard__title">Cursor</h3>
-                  <p className="SkillsCard__description">
-                    Install from the Cursor Marketplace, or add manually via
-                    Settings → Rules → Add Rule → Remote Rule (GitHub) with
-                    this slug:
-                  </p>
-                  <div className="SkillsCard__commands">
-                    <CopyButton
-                      variant="path"
-                      value="stellar/stellar-dev-skill"
-                    />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div
-              className="SkillsLanding__filterItem"
-              data-category="npx skills"
-            >
-              <Card>
-                <div className="SkillsCard">
-                  <h3 className="SkillsCard__title">npx skills</h3>
-                  <p className="SkillsCard__description">
-                    Install using the npx skills CLI:
-                  </p>
-                  <div className="SkillsCard__commands">
-                    <CopyButton
-                      variant="path"
-                      value="npx skills add https://github.com/stellar/stellar-dev-skill"
-                    />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div
-              className="SkillsLanding__filterItem"
-              data-category="Clone repo"
-            >
-              <Card>
-                <div className="SkillsCard">
-                  <h3 className="SkillsCard__title">Clone repo</h3>
-                  <p className="SkillsCard__description">
-                    Clone the repo and copy the skills directory to your
-                    agent&apos;s skills location:
-                  </p>
-                  <div className="SkillsCard__commands">
-                    <CopyButton
-                      variant="path"
-                      value="git clone https://github.com/stellar/stellar-dev-skill"
-                    />
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </SkillsFilter>
+          <InstallTabs pasteCommand={heroValue} />
         </section>
 
         <section className="SkillsLanding__cards" aria-label="Skills list">
