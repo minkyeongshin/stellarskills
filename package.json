@@ -17,25 +17,25 @@
     "lint:ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/third-parties": "^15.5.7",
+    "@next/third-parties": "^16.2.6",
     "@stellar/design-system": "^3.2.7",
-    "next": "15.5.9",
+    "next": "16.2.6",
     "react": "^19.2.2",
     "react-dom": "^19.2.2"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.4.4",
-    "@types/node": "^24.1.0",
+    "@next/eslint-plugin-next": "^16.2.6",
+    "@types/node": "^25.9.1",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "@typescript-eslint/eslint-plugin": "^8.30.1",
-    "eslint": "^9.32.0",
-    "eslint-config-next": "15.4.4",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "eslint": "^10.4.1",
+    "eslint-config-next": "16.2.6",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "prettier": "^3.5.3",
-    "sass": "^1.86.3",
-    "typescript": "^5.8.3"
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.8.3",
+    "sass": "^1.100.0",
+    "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@10.15.1"
 }
