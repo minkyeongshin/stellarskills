@@ -17,25 +17,25 @@
     "lint:ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/third-parties": "^15.5.7",
-    "@stellar/design-system": "^3.2.7",
-    "next": "15.5.9",
+    "@next/third-parties": "^16.2.12",
+    "@stellar/design-system": "^4.0.2",
+    "next": "16.2.12",
     "react": "^19.2.2",
     "react-dom": "^19.2.2"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.4.4",
-    "@types/node": "^24.1.0",
+    "@next/eslint-plugin-next": "^16.2.12",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "@typescript-eslint/eslint-plugin": "^8.30.1",
-    "eslint": "^9.32.0",
-    "eslint-config-next": "15.4.4",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "eslint": "^10.8.0",
+    "eslint-config-next": "16.2.12",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "prettier": "^3.5.3",
-    "sass": "^1.86.3",
-    "typescript": "^5.8.3"
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.9.6",
+    "sass": "^1.102.0",
+    "typescript": "^7.0.2"
   },
   "packageManager": "pnpm@10.15.1"
 }
